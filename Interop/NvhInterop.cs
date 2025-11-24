@@ -16,5 +16,14 @@ namespace NvhLibCSharp.Interop
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "OrderSection")]
         public static partial int OrderSection(Signal signal, Rpm rpm, int spectrumLines, double targetOrder, double orderBandwidth, double minRpm, double maxRpm, double rpmStep, double referenceValue, int formatType, int windowType, int weightType, int scaleType, int rpmTriggerType, ref IntPtr data, ref IntPtr rpmAxis, ref int bins);
+        
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "AveragedSpectrumByIncrement")]
+        public static partial int AveragedSpectrum(Signal signal, int spectrumLines, double increment, int formatType, int averageType, int windowType, int weightType, ref IntPtr data, ref int bins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "GenerateRpmOrderColormap")]
+        public static partial int RpmOrderMap(Signal signal, Rpm rpm, double maxOrder, double orderResolution, double oversamplingFactor, double minRpm, double maxRpm, double rpmStep, double referenceValue, int formatType, int windowType, int weightType, int scaleType, ref IntPtr data, ref IntPtr rpmAxis, ref IntPtr orderAxis, ref int rpmBins, ref int orderBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelope")]
+        public static partial int HilbertEnvelope(Signal signal, ref IntPtr data, ref int bins);
     }
 }

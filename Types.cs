@@ -36,4 +36,11 @@ namespace NvhLibCSharp
         Up = 0,
         ImmUp = 1,
     }
+
+    public enum Average
+    {
+        Energy,
+        Mean,
+        Max,
+    }
 }
