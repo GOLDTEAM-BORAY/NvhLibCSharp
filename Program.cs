@@ -41,6 +41,28 @@ namespace NvhLibCSharp
 #endif
 
 #if false
+            var tfmData = Nvh.TimeFrequencyMap(signal, 4096, 0.15, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, out var tfmTimeAxis, out var tfmFreqAxis);
+            for (int i = 0; i < tfmTimeAxis.Length; i++)
+            {
+                for (int j = 0; j < tfmFreqAxis.Length; j++)
+                {
+                    Console.WriteLine($"{tfmTimeAxis[i]:F6}\t{tfmFreqAxis[j]:F6}\t{tfmData[i, j]:F6}");
+                }
+            }
+#endif
+
+#if false
+            var rfmData = Nvh.RpmFrequencyMap(signal, rpm, 4096, 1000, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, RpmTrigger.Up, out var rfmRpmAxis, out var rfmFreqAxis);
+            for (int i = 0; i < samples.Length; i++) 
+            {
+                for (int j = 0; j < rfmFreqAxis.Length; j++)
+                {
+                    Console.WriteLine($"{rfmRpmAxis[i]:F6}\t{rfmFreqAxis[j]:F6}\t{rfmData[i, j]:F6}");
+                }
+            }
+#endif
+
+#if false
             var romData = Nvh.RpmOrderMap(signal, rpm, 32.0, 0.25, 600, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, out var romRpmAxis, out var romOrderAxis);
             for (int i = 0; i < romRpmAxis.Length; i++)
             {
