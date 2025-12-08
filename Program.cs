@@ -15,7 +15,7 @@ namespace NvhLibCSharp
             var signal = new Signal(samples, 1.0 / 51200.0);
             var rpm = new Rpm(rpmValues, 1.0 / 51200.0);
 
-#if false
+#if true
             var oaData = Nvh.OverallLevelSpectral(signal, 4096, 0.15, 2e-5, Window.Hanning, Weight.A, Scale.Linear, out var oaTimeAxis);
             for (int i = 0; i < oaTimeAxis.Length; i++)
             {
