@@ -31,5 +31,14 @@ namespace NvhLibCSharp.Interop
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelope")]
         public static partial int HilbertEnvelope(Signal signal, ref IntPtr data, ref int bins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "MorletWaveletTransform")]
+        public static partial int MorletWaveletTransform(Signal signal, IntPtr frequencyAxis, int frequencyBins, double nCycles, ref IntPtr data, ref int timeBins, ref int freqBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "LmsMorletWaveletTransform")]
+        public static partial int LmsMorletWaveletTransform(Signal signal, double minFreq, double maxFreq, int octave, ref IntPtr data, ref int timeBins, ref IntPtr freqAxis, ref int freqBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "ModulationSpectrumAnalyze")]
+        public static partial int ModulationSpectrumAnalyze(Signal signal, IntPtr frequencyAxis, int frequencyBins, ref IntPtr data, ref int timeBins, ref IntPtr modulationDepth, ref IntPtr modulationFreq);
     }
 }

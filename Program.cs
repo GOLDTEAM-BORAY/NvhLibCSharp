@@ -1,5 +1,6 @@
 ﻿using NvhLibCSharp.Interop;
 using NvhLibCSharp.Utils;
+using System.Xml.Linq;
 
 namespace NvhLibCSharp
 {
@@ -15,7 +16,7 @@ namespace NvhLibCSharp
             var signal = new Signal(samples, 1.0 / 51200.0);
             var rpm = new Rpm(rpmValues, 1.0 / 51200.0);
 
-#if true
+#if false
             var oaData = Nvh.OverallLevelSpectral(signal, 4096, 0.15, 2e-5, Window.Hanning, Weight.A, Scale.Linear, out var oaTimeAxis);
             for (int i = 0; i < oaTimeAxis.Length; i++)
             {
@@ -79,6 +80,44 @@ namespace NvhLibCSharp
             for (int i = 0; i < heData.Length; i++)
             {
                 Console.WriteLine($"{i * timeResolution:F6}\t{heData[i]:F6}");
+            }
+#endif
+
+#if false
+            var simpleSamples = LoadData.Double("SampleData/simple.txt");
+            var simpleSignal = new Signal(simpleSamples, 1.0 / 1280.0);
+            var frequencyAxis = MathUtils.Logspace(Math.Log10(1.0), Math.Log10(1280.0 / 2.0), 50);
+
+            var tf = Nvh.MorletWaveletTransform(simpleSignal, [..frequencyAxis], 5, out var timeAxis);
+
+            for (int i = 0; i < tf.GetLength(1); i++)
+            {
+                Console.WriteLine($"{timeAxis[i]:F6}\t{tf[0, i]:F6}");
+            }
+#endif
+
+#if false
+            var simpleSamples = LoadData.Double("SampleData/simple.txt");
+            var simpleSignal = new Signal(simpleSamples, 1.0 / 1280.0);
+
+            var tf = Nvh.LmsMorletWaveletTransform(simpleSignal, 10, 1000, 100, out var timeAxis, out var freqAxis);
+
+            for (int i = 0; i < tf.GetLength(1); i++)
+            {
+                Console.WriteLine($"{timeAxis[i]:F6}\t{tf[0, i]:F6}");
+            }
+#endif
+
+#if false
+            var simpleModedSamples = LoadData.Double("SampleData/simple_modulated.txt");
+            var simpleModedSignal = new Signal(simpleModedSamples, 1.0 / 1000.0);
+
+            var frequencyAxis = MathUtils.Linspace(1, 100, 100);
+            var tf = Nvh.ModulationSpectrumAnalysis(simpleModedSignal, [ ..frequencyAxis], out var modulationDepth, out var modulationFreq);
+
+            for (int i = 0; i < modulationFreq.Length; i++)
+            {
+                Console.WriteLine($"{modulationFreq[i]:F6}\t{modulationDepth[i]:F6}");
             }
 #endif
         }

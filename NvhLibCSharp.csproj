@@ -20,4 +20,13 @@
 	</None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="SampleData\simple.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="SampleData\simple_modulated.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
