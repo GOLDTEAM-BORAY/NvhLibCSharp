@@ -149,7 +149,7 @@ namespace NvhLibCSharp
                 {
                     // 避免对数计算中的零值或负值
                     var noneZeroValue = Math.Max(data[i] / referenceValue, 1e-20);
-                    data[i] = 10.0 * Math.Log10(noneZeroValue);
+                    data[i] = 20.0 * Math.Log10(noneZeroValue);
                 }
             }
 
