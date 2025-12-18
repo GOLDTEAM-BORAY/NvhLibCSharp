@@ -33,7 +33,7 @@ namespace NvhLibCSharp
             }
 #endif
 
-#if true
+#if false
             var calcOpt = new SpectraCalcOptions(calcType: Enums.SpectraCalcType.Resolution, calcValue: 6.25);
             var stepOpt = new SpectraStepOptions(stepType: Enums.SpectraStepType.Increment, stepValue: 0.15);
             var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
@@ -87,7 +87,7 @@ namespace NvhLibCSharp
             }
 #endif
 
-#if false
+#if true
             var simpleSamples = LoadData.Double("SampleData/simple.txt");
             var simpleSignal = new Signal(simpleSamples, 1.0 / 1280.0);
             var frequencyAxis = MathUtils.Logspace(Math.Log10(1.0), Math.Log10(1280.0 / 2.0), 50);
