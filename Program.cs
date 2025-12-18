@@ -1,4 +1,5 @@
 ﻿using NvhLibCSharp.Interop;
+using NvhLibCSharp.Options;
 using NvhLibCSharp.Utils;
 using System.Xml.Linq;
 
@@ -32,9 +33,12 @@ namespace NvhLibCSharp
             }
 #endif
 
-#if false
-            var asData = Nvh.AveragedSpectrum(signal, 4096, 0.15, Format.Rms, Average.Energy, Window.Hanning, Weight.A);
-            var freqResolution = 1.0 / (signal.DeltaTime * 4096 * 2);
+#if true
+            var calcOpt = new SpectraCalcOptions(calcType: Enums.SpectraCalcType.Resolution, calcValue: 6.25);
+            var stepOpt = new SpectraStepOptions(stepType: Enums.SpectraStepType.Increment, stepValue: 0.15);
+            var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
+            var asData = Nvh.AveragedSpectrum(signal, calcOpt, stepOpt, scaleOpt, Format.Rms, Average.Energy, Window.Hanning, Weight.A);
+            var freqResolution = 6.25;
             for (int i = 0; i < asData.Length; i++)
             {
                 Console.WriteLine($"{i * freqResolution:F6}\t{asData[i]:F6}");

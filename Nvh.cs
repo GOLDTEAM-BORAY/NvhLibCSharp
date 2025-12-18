@@ -28,10 +28,10 @@ namespace NvhLibCSharp
         /// <summary>
         /// 计算整体声级的频谱（单次谱线集合）。
         /// </summary>
-        /// <param name="signal">输入信号描述（包含采样数据、采样间隔等）。</param>
-        /// <param name="spectrumLines">用于 FFT 或频谱计算的谱线数。</param>
+        /// <param name="signal">输入信号描述。</param>
+        /// <param name="spectrumLines">用于频谱计算的谱线数。</param>
         /// <param name="increment">时间轴增量（秒），用于输出时间轴的采样间隔。</param>
-        /// <param name="referenceValue">归一化或参考值（例如用于 dB 计算的参考值）。</param>
+        /// <param name="referenceValue">（用于 dB 计算的参考值）。</param>
         /// <param name="windowType">窗函数类型。</param>
         /// <param name="weightType">加权类型（例如 A 权重、C 权重）。</param>
         /// <param name="scaleType">刻度类型（线性或对数等）。</param>
@@ -72,7 +72,7 @@ namespace NvhLibCSharp
         /// <param name="minRpm">最小转速（用于轴）。</param>
         /// <param name="maxRpm">最大转速（用于轴）。</param>
         /// <param name="rpmStep">转速步长。</param>
-        /// <param name="referenceValue">参考值（用于归一化或 dB 计算）。</param>
+        /// <param name="referenceValue">参考值（用于dB 计算）。</param>
         /// <param name="formatType">频谱格式类型。</param>
         /// <param name="windowType">窗函数类型。</param>
         /// <param name="weightType">加权类型。</param>
@@ -101,13 +101,13 @@ namespace NvhLibCSharp
         }
 
         /// <summary>
-        /// 计算平均谱（Averaged Spectrum）。
+        /// 计算平均线性自功率谱（Averaged AutoPower Linear Spectrum）。
         /// </summary>
         /// <param name="signal">输入信号。</param>
         /// <param name="calcOpt">频谱计算选项，用于决定谱线数/分辨率/帧长等。</param>
         /// <param name="stepOpt">步进选项，用于决定时间步进或重叠。</param>
-        /// <param name="formatType">输出格式类型。</param>
-        /// <param name="averageType">平均方式（例如线性/对数）。</param>
+        /// <param name="formatType">线性自功率谱（AutoPower Linear）幅值格式类型。</param>
+        /// <param name="averageType">平均方式（算术平均/能量平均/最大平均）。</param>
         /// <param name="windowType">窗函数类型。</param>
         /// <param name="weightType">加权类型。</param>
         /// <returns>返回平均谱数据数组，长度由本机计算决定。</returns>
@@ -116,7 +116,7 @@ namespace NvhLibCSharp
         /// 会将选项转换为具体的谱线数和时间增量用于本机调用。
         /// </remarks>
         /// <exception cref="InvalidOperationException">当本机库返回错误码时抛出，消息来自 <see cref="GetLastErrorMessage(int)"/>。</exception>
-        public static double[] AveragedSpectrum(Signal signal, SpectraCalcOptions calcOpt, SpectraStepOptions stepOpt, Format formatType, Average averageType, Window windowType, Weight weightType)
+        public static double[] AveragedSpectrum(Signal signal, SpectraCalcOptions calcOpt, SpectraStepOptions stepOpt, ScaleOptions scaleOpt, Format formatType, Average averageType, Window windowType, Weight weightType)
         {
             var spectrumLines = calcOpt.CalcType switch
             {
@@ -137,9 +137,22 @@ namespace NvhLibCSharp
             int bins = 0;
             int errCode = NvhInterop.AveragedSpectrum(signal, (int)spectrumLines, increment, (int)formatType, (int)averageType, (int)windowType, (int)weightType, ref dataPtr, ref bins);
             Assert(errCode);
+
             double[] data = new double[bins];
             Marshal.Copy(dataPtr, data, 0, bins);
             Marshal.FreeCoTaskMem(dataPtr);
+
+            if (scaleOpt.Scale == Scale.Db)
+            {
+                double referenceValue = scaleOpt.ReferenceValue;
+                for (int i = 0; i < bins; i++)
+                {
+                    // 避免对数计算中的零值或负值
+                    var noneZeroValue = Math.Max(data[i] / referenceValue, 1e-20);
+                    data[i] = 10.0 * Math.Log10(noneZeroValue);
+                }
+            }
+
             return data;
         }
 
@@ -149,7 +162,7 @@ namespace NvhLibCSharp
         /// <param name="signal">输入信号。</param>
         /// <param name="spectrumLines">谱线数。</param>
         /// <param name="increment">时间轴增量（秒）。</param>
-        /// <param name="referenceValue">参考值（用于归一化或 dB）。</param>
+        /// <param name="referenceValue">参考值（用于dB）。</param>
         /// <param name="formatType">格式类型。</param>
         /// <param name="windowType">窗类型。</param>
         /// <param name="weightType">加权类型。</param>
