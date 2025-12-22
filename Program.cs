@@ -1,7 +1,5 @@
 ﻿using NvhLibCSharp.Interop;
-using NvhLibCSharp.Options;
 using NvhLibCSharp.Utils;
-using System.Xml.Linq;
 
 namespace NvhLibCSharp
 {
@@ -11,11 +9,12 @@ namespace NvhLibCSharp
         {
             Nvh.LoadLicense("D:\\测试\\LIC-20251114-3685ebd9.lic");
 
+            var s16Length = 51200 * 16;
             var samples = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
             var rpmValues = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\speed_0.txt");
 
-            var signal = new Signal(samples, 1.0 / 51200.0);
-            var rpm = new Rpm(rpmValues, 1.0 / 51200.0);
+            var signal = new Signal(samples[..s16Length], 1.0 / 51200.0);
+            var rpm = new Rpm(rpmValues[..s16Length], 1.0 / 51200.0);
 
 #if false
             var oaData = Nvh.OverallLevelSpectral(signal, 4096, 0.15, 2e-5, Window.Hanning, Weight.A, Scale.Linear, out var oaTimeAxis);
@@ -34,11 +33,11 @@ namespace NvhLibCSharp
 #endif
 
 #if false
-            var calcOpt = new SpectraCalcOptions(calcType: Enums.SpectraCalcType.Resolution, calcValue: 6.25);
+            var calcOpt = new SpectraCalcOptions(calcType: Enums.SpectraCalcType.Resolution, calcValue: 1);
             var stepOpt = new SpectraStepOptions(stepType: Enums.SpectraStepType.Increment, stepValue: 0.15);
             var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
             var asData = Nvh.AveragedSpectrum(signal, calcOpt, stepOpt, scaleOpt, Format.Rms, Average.Energy, Window.Hanning, Weight.A);
-            var freqResolution = 6.25;
+            var freqResolution = 1;
             for (int i = 0; i < asData.Length; i++)
             {
                 Console.WriteLine($"{i * freqResolution:F6}\t{asData[i]:F6}");
@@ -88,16 +87,8 @@ namespace NvhLibCSharp
 #endif
 
 #if true
-            var simpleSamples = LoadData.Double("SampleData/simple.txt");
-            var simpleSignal = new Signal(simpleSamples, 1.0 / 1280.0);
-            var frequencyAxis = MathUtils.Logspace(Math.Log10(1.0), Math.Log10(1280.0 / 2.0), 50);
-
-            var tf = Nvh.MorletWaveletTransform(simpleSignal, [..frequencyAxis], 5, out var timeAxis);
-
-            for (int i = 0; i < tf.GetLength(1); i++)
-            {
-                Console.WriteLine($"{timeAxis[i]:F6}\t{tf[0, i]:F6}");
-            }
+            var frequencyAxis = MathUtils.Logspace(Math.Log10(1.0), Math.Log10(51200.0 / 2), 50);
+            var tf = Nvh.MorletWaveletTransform(signal, [..frequencyAxis], 5, out var timeAxis);
 #endif
 
 #if false

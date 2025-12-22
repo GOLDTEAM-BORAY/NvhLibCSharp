@@ -6,14 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<LangVersion>14.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <None Update="BrcSignalKit.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="libfftw3-3-x64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
 	<None Include="SampleData\**\*">
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
