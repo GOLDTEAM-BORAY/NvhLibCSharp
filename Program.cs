@@ -1,4 +1,17 @@
-﻿using NvhLibCSharp.Interop;
+﻿// #define OVERALL
+// #define ORDER_SECTION
+// #define AVG_SPECTRA
+// #define TIME_FREQ_MAP
+// #define RPM_FREQ_MAP
+// #define RPM_ORDER_MAP
+// #define HILBERT
+// #define MORLET_WAVELET
+#define MORLET_WAVELET_LMS
+// #define MODULATION
+
+
+using NvhLibCSharp.Interop;
+using NvhLibCSharp.Options;
 using NvhLibCSharp.Utils;
 
 namespace NvhLibCSharp
@@ -8,111 +21,172 @@ namespace NvhLibCSharp
         static void Main(string[] args)
         {
             Nvh.LoadLicense("D:\\测试\\LIC-20251114-3685ebd9.lic");
-
-            var s16Length = 51200 * 16;
-            var samples = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
-            var rpmValues = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\speed_0.txt");
-
-            var signal = new Signal(samples[..s16Length], 1.0 / 51200.0);
-            var rpm = new Rpm(rpmValues[..s16Length], 1.0 / 51200.0);
-
-#if false
-            var oaData = Nvh.OverallLevelSpectral(signal, 4096, 0.15, 2e-5, Window.Hanning, Weight.A, Scale.Linear, out var oaTimeAxis);
-            for (int i = 0; i < oaTimeAxis.Length; i++)
+#if OVERALL
             {
-                Console.WriteLine($"{oaTimeAxis[i]:F6}\t{oaData[i]:F6}");
-            }
-#endif
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
 
-#if false
-            var otsData = Nvh.OrderSection(signal, rpm, 4096, 14.0, 0.5, 1000, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, RpmTrigger.Up, out var otsRpmAxis);
-            for (int i = 0; i < otsRpmAxis.Length; i++)
-            {
-                Console.WriteLine($"{otsRpmAxis[i]:F6}\t{otsData[i]:F6}");
-            }
-#endif
+                var oaData = Nvh.OverallLevelSpectral(signal, 4096, 0.15, 2e-5, Window.Hanning, Weight.A, Scale.Linear, out var oaTimeAxis);
 
-#if false
-            var calcOpt = new SpectraCalcOptions(calcType: Enums.SpectraCalcType.Resolution, calcValue: 1);
-            var stepOpt = new SpectraStepOptions(stepType: Enums.SpectraStepType.Increment, stepValue: 0.15);
-            var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
-            var asData = Nvh.AveragedSpectrum(signal, calcOpt, stepOpt, scaleOpt, Format.Rms, Average.Energy, Window.Hanning, Weight.A);
-            var freqResolution = 1;
-            for (int i = 0; i < asData.Length; i++)
-            {
-                Console.WriteLine($"{i * freqResolution:F6}\t{asData[i]:F6}");
-            }
-#endif
-
-#if false
-            var tfmData = Nvh.TimeFrequencyMap(signal, 4096, 0.15, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, out var tfmTimeAxis, out var tfmFreqAxis);
-            for (int i = 0; i < tfmTimeAxis.Length; i++)
-            {
-                for (int j = 0; j < tfmFreqAxis.Length; j++)
+                for (int i = 0; i < oaTimeAxis.Length; i++)
                 {
-                    Console.WriteLine($"{tfmTimeAxis[i]:F6}\t{tfmFreqAxis[j]:F6}\t{tfmData[i, j]:F6}");
+                    Console.WriteLine($"{oaTimeAxis[i]:F6}\t{oaData[i]:F6}");
                 }
             }
 #endif
 
-#if false
-            var rfmData = Nvh.RpmFrequencyMap(signal, rpm, 4096, 1000, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, RpmTrigger.Up, out var rfmRpmAxis, out var rfmFreqAxis);
-            for (int i = 0; i < samples.Length; i++) 
+#if ORDER_SECTION
             {
-                for (int j = 0; j < rfmFreqAxis.Length; j++)
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var rpmSample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\speed_0.txt");
+                var rpm = new Rpm(rpmSample, 1.0 / 51200.0);
+
+                var otsData = Nvh.OrderSection(signal, rpm, 4096, 14.0, 0.5, 1000, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, RpmTrigger.Up, out var otsRpmAxis);
+
+                for (int i = 0; i < otsRpmAxis.Length; i++)
                 {
-                    Console.WriteLine($"{rfmRpmAxis[i]:F6}\t{rfmFreqAxis[j]:F6}\t{rfmData[i, j]:F6}");
+                    Console.WriteLine($"{otsRpmAxis[i]:F6}\t{otsData[i]:F6}");
                 }
             }
 #endif
 
-#if false
-            var romData = Nvh.RpmOrderMap(signal, rpm, 32.0, 0.25, 600, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, out var romRpmAxis, out var romOrderAxis);
-            for (int i = 0; i < romRpmAxis.Length; i++)
+#if AVG_SPECTRA
             {
-                for (int j = 0; j < romOrderAxis.Length; j++)
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var calcOpt = new SpectraCalcOptions(calcType: Enums.SpectraCalcType.Resolution, calcValue: 1);
+                var stepOpt = new SpectraStepOptions(stepType: Enums.SpectraStepType.Increment, stepValue: 0.15);
+                var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
+
+                var asData = Nvh.AveragedSpectrum(signal, calcOpt, stepOpt, scaleOpt, Format.Rms, Average.Energy, Window.Hanning, Weight.A);
+
+                for (int i = 0; i < asData.Length; i++)
                 {
-                    Console.WriteLine($"{romRpmAxis[i]:F6}\t{romOrderAxis[j]:F6}\t{romData[i, j]:F6}");
+                    Console.WriteLine($"{i}\t{asData[i]:F6}");
                 }
             }
 #endif
 
-#if false
-            var heData = Nvh.HilbertEnvelope(signal);
-            var timeResolution = signal.DeltaTime;
-            for (int i = 0; i < heData.Length; i++)
+#if TIME_FREQ_MAP
             {
-                Console.WriteLine($"{i * timeResolution:F6}\t{heData[i]:F6}");
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var tfmData = Nvh.TimeFrequencyMap(signal, 4096, 0.15, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, out var tfmTimeAxis, out var tfmFreqAxis);
+
+                for (int i = 0; i < tfmTimeAxis.Length; i++)
+                {
+                    for (int j = 0; j < tfmFreqAxis.Length; j++)
+                    {
+                        Console.WriteLine($"{tfmTimeAxis[i]:F6}\t{tfmFreqAxis[j]:F6}\t{tfmData[i, j]:F6}");
+                    }
+                }
             }
 #endif
 
-#if true
-            var frequencyAxis = MathUtils.Logspace(Math.Log10(1.0), Math.Log10(51200.0 / 2), 50);
-            var tf = Nvh.MorletWaveletTransform(signal, [..frequencyAxis], 5, out var timeAxis);
-#endif
-
-#if false
-            var simpleSamples = LoadData.Double("SampleData/simple.txt");
-            var simpleSignal = new Signal(simpleSamples, 1.0 / 1280.0);
-
-            var tf = Nvh.LmsMorletWaveletTransform(simpleSignal, 10, 1000, 100, out var timeAxis, out var freqAxis);
-
-            for (int i = 0; i < tf.GetLength(1); i++)
+#if RPM_FREQ_MAP
             {
-                Console.WriteLine($"{timeAxis[i]:F6}\t{tf[0, i]:F6}");
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var rpmSample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\speed_0.txt");
+                var rpm = new Rpm(rpmSample, 1.0 / 51200.0);
+
+                var rfmData = Nvh.RpmFrequencyMap(signal, rpm, 4096, 1000, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, RpmTrigger.Up, out var rfmRpmAxis, out var rfmFreqAxis);
+
+                for (int i = 0; i < sample.Length; i++)
+                {
+                    for (int j = 0; j < rfmFreqAxis.Length; j++)
+                    {
+                        Console.WriteLine($"{rfmRpmAxis[i]:F6}\t{rfmFreqAxis[j]:F6}\t{rfmData[i, j]:F6}");
+                    }
+                }
             }
 #endif
 
-#if false
-            var simpleModedSamples = LoadData.Double("SampleData/simple_modulated.txt");
-            var simpleModedSignal = new Signal(simpleModedSamples, 1.0 / 1000.0);
-
-            var frequencyAxis = MathUtils.Linspace(1, 100, 100);
-            var tf = Nvh.ModulationSpectrumAnalysis(simpleModedSignal, [ ..frequencyAxis], out var modulationDepth, out var modulationFreq);
-
-            for (int i = 0; i < modulationFreq.Length; i++)
+#if RPM_ORDER_MAP
             {
-                Console.WriteLine($"{modulationFreq[i]:F6}\t{modulationDepth[i]:F6}");
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+                var rpmSample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\speed_0.txt");
+                var rpm = new Rpm(rpmSample, 1.0 / 51200.0);
+
+                var romData = Nvh.RpmOrderMap(signal, rpm, 32.0, 0.25, 600, 4000, 25, 2e-5, Format.Rms, Window.Hanning, Weight.A, Scale.Linear, out var romRpmAxis, out var romOrderAxis);
+                for (int i = 0; i < romRpmAxis.Length; i++)
+                {
+                    for (int j = 0; j < romOrderAxis.Length; j++)
+                    {
+                        Console.WriteLine($"{romRpmAxis[i]:F6}\t{romOrderAxis[j]:F6}\t{romData[i, j]:F6}");
+                    }
+                }
+            }
+#endif
+
+#if HILBERT
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var heData = Nvh.HilbertEnvelope(signal);
+                var timeResolution = signal.DeltaTime;
+
+                for (int i = 0; i < heData.Length; i++)
+                {
+                    Console.WriteLine($"{i * timeResolution:F6}\t{heData[i]:F6}");
+                }
+            }
+#endif
+
+#if MORLET_WAVELET
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200.0);
+
+                var frequencyAxis = MathUtils.Logspace(Math.Log10(1.0), Math.Log10(51200.0 / 2), 50);
+                var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
+
+                var tf = Nvh.MorletWaveletTransform(signal, scaleOpt, [.. frequencyAxis], 5, out var timeAxis);
+
+                for (int i = 0; i < tf.GetLength(1); i++)
+                {
+                    Console.WriteLine($"{timeAxis[i]:F6}\t{tf[0, i]:F6}");
+                }
+            }
+#endif
+
+#if MORLET_WAVELET_LMS
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200.0);
+
+                var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
+
+                var tf = Nvh.LmsMorletWaveletTransform(signal, scaleOpt, 10, 1000, 100, out var timeAxis, out var freqAxis);
+
+                for (int i = 0; i < tf.GetLength(1); i++)
+                {
+                    Console.WriteLine($"{timeAxis[i]:F6}\t{tf[0, i]:F6}");
+                }
+            }
+#endif
+
+#if MODULATION
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200.0);
+
+                var frequencyAxis = MathUtils.Linspace(1, 100, 100);
+                var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
+
+                var tf = Nvh.ModulationSpectrumAnalysis(signal, scaleOpt, [.. frequencyAxis], out var modulationDepth, out var modulationFreq);
+
+                for (int i = 0; i < modulationFreq.Length; i++)
+                {
+                    Console.WriteLine($"{modulationFreq[i]:F6}\t{modulationDepth[i]:F6}");
+                }
             }
 #endif
         }

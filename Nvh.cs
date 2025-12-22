@@ -326,6 +326,7 @@ namespace NvhLibCSharp
         /// 使用 Morlet 小波对指定频率轴进行小波变换。
         /// </summary>
         /// <param name="signal">输入信号。</param>
+        /// <param name="scaleOpt">dB/Lin选项，指定输出数据的db/Lin类型和参考值。</param>
         /// <param name="frequencyAxis">要分析的频率轴数组（赫兹）。</param>
         /// <param name="nCycles">小波的循环数，控制时间-频率分辨率权衡。</param>
         /// <param name="timeAxis">输出时间轴，单位为秒。</param>
@@ -337,7 +338,7 @@ namespace NvhLibCSharp
         /// 方法会为传入的频率轴在非托管内存中分配临时缓冲区并在完成后释放。
         /// </remarks>
         /// <exception cref="InvalidOperationException">当本机库返回错误码时抛出，消息来自 <see cref="GetLastErrorMessage(int)"/>。</exception>
-        public static double[,] MorletWaveletTransform(Signal signal, double[] frequencyAxis, double nCycles, out double[] timeAxis)
+        public static double[,] MorletWaveletTransform(Signal signal, ScaleOptions scaleOpt, double[] frequencyAxis, double nCycles, out double[] timeAxis)
         {
             IntPtr freqAxisPtr = Marshal.AllocCoTaskMem(frequencyAxis.Length * sizeof(double));
             Marshal.Copy(frequencyAxis, 0, freqAxisPtr, frequencyAxis.Length);
@@ -345,7 +346,7 @@ namespace NvhLibCSharp
             IntPtr dataPtr = IntPtr.Zero;
             int timeBins = 0;
             int freqBins = 0;
-            int errCode = NvhInterop.MorletWaveletTransform(signal, freqAxisPtr, frequencyAxis.Length, nCycles, ref dataPtr, ref timeBins, ref freqBins);
+            int errCode = NvhInterop.MorletWaveletTransform(signal, freqAxisPtr, frequencyAxis.Length, nCycles, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref dataPtr, ref timeBins, ref freqBins);
             Assert(errCode);
 
             Marshal.FreeCoTaskMem(freqAxisPtr);
@@ -374,6 +375,7 @@ namespace NvhLibCSharp
         /// 以对数/倍频程方式（LMS）计算 Morlet 小波变换并返回频率轴。
         /// </summary>
         /// <param name="signal">输入信号。</param>
+        /// <param name="scaleOpt">dB/Lin选项，指定输出数据的db/Lin类型和参考值。</param>
         /// <param name="minFrequency">最小频率（Hz）。</param>
         /// <param name="maxFrequency">最大频率（Hz）。</param>
         /// <param name="octave">每倍频程的划分数（分辨率）。</param>
@@ -381,13 +383,13 @@ namespace NvhLibCSharp
         /// <param name="frequencyAxis">输出频率轴数组，表示每个频带的中心频率（Hz）。</param>
         /// <returns>返回二维数组，维度为 [frequencyBins, timeBins]。</returns>
         /// <exception cref="InvalidOperationException">当本机库返回错误码时抛出，消息来自 <see cref="GetLastErrorMessage(int)"/>。</exception>
-        public static double[,] LmsMorletWaveletTransform(Signal signal, double minFrequency, double maxFrequency, int octave, out double[] timeAxis, out double[] frequencyAxis)
+        public static double[,] LmsMorletWaveletTransform(Signal signal, ScaleOptions scaleOpt, double minFrequency, double maxFrequency, int octave, out double[] timeAxis, out double[] frequencyAxis)
         {
             IntPtr dataPtr = IntPtr.Zero;
             IntPtr frequencyBinsPtr = IntPtr.Zero;
             int timeBins = 0;
             int freqBins = 0;
-            int errCode = NvhInterop.LmsMorletWaveletTransform(signal, minFrequency, maxFrequency, octave, ref dataPtr, ref timeBins, ref frequencyBinsPtr, ref freqBins);
+            int errCode = NvhInterop.LmsMorletWaveletTransform(signal, minFrequency, maxFrequency, octave, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref dataPtr, ref timeBins, ref frequencyBinsPtr, ref freqBins);
             Assert(errCode);
 
             double[,] data = new double[freqBins, timeBins];
@@ -420,6 +422,7 @@ namespace NvhLibCSharp
         /// 对给定频率轴执行调制谱分析（Modulation Spectrum Analysis）。
         /// </summary>
         /// <param name="signal">输入信号。</param>
+        /// <param name="scaleOpt">dB/Lin选项，指定输出数据的db/Lin类型和参考值。</param>
         /// <param name="frequencyAxis">要分析的频率轴数组（赫兹）。</param>
         /// <param name="modulationDepth">输出的调制深度数组，对应时间轴的每个点。</param>
         /// <param name="modulationFreq">输出的调制频率数组，对应时间轴的每个点（赫兹）。</param>
@@ -430,7 +433,7 @@ namespace NvhLibCSharp
         /// 本方法在非托管内存中为频率轴分配缓冲区并在完成后释放；输出的 <paramref name="modulationDepth"/> 与 <paramref name="modulationFreq"/> 长度等于时间箱数（timeBins）。
         /// </remarks>
         /// <exception cref="InvalidOperationException">当本机库返回错误码时抛出，消息来自 <see cref="GetLastErrorMessage(int)"/>。</exception>
-        public static double[,] ModulationSpectrumAnalysis(Signal signal, double[] frequencyAxis, out double[] modulationDepth, out double[] modulationFreq)
+        public static double[,] ModulationSpectrumAnalysis(Signal signal, ScaleOptions scaleOpt, double[] frequencyAxis, out double[] modulationDepth, out double[] modulationFreq)
         {
             IntPtr freqAxisPtr = Marshal.AllocCoTaskMem(frequencyAxis.Length * sizeof(double));
             Marshal.Copy(frequencyAxis, 0, freqAxisPtr, frequencyAxis.Length);
@@ -438,7 +441,7 @@ namespace NvhLibCSharp
             IntPtr modulationDepthPtr = IntPtr.Zero;
             IntPtr modulationFreqPtr = IntPtr.Zero;
             int timeBins = 0;
-            int errCode = NvhInterop.ModulationSpectrumAnalyze(signal, freqAxisPtr, frequencyAxis.Length, ref dataPtr, ref timeBins, ref modulationDepthPtr, ref modulationFreqPtr);
+            int errCode = NvhInterop.ModulationSpectrumAnalyze(signal, freqAxisPtr, frequencyAxis.Length, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref dataPtr, ref timeBins, ref modulationDepthPtr, ref modulationFreqPtr);
             Assert(errCode);
             Marshal.FreeCoTaskMem(freqAxisPtr);
             double[,] data = new double[frequencyAxis.Length, timeBins];
