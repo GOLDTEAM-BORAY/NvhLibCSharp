@@ -2,6 +2,7 @@
 using NvhLibCSharp.Interop;
 using NvhLibCSharp.Options;
 using System.Runtime.InteropServices;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace NvhLibCSharp
 {
@@ -323,6 +324,90 @@ namespace NvhLibCSharp
         }
 
         /// <summary>
+        /// 计算指定信号的希尔伯特包络谱，并将谱数据作为 double 数组返回。
+        /// </summary>
+        /// <remarks>
+        /// 返回的频谱与频率轴数组一一对应，谱中每个元素与频率轴相同索引处的频率值相匹配。
+        /// 本方法为输出数组分配内存，内存由调用方负责管理。
+        /// </remarks>
+        /// <param name="signal">要分析的输入信号。不能为空。</param>
+        /// <param name="format">计算频谱时使用的格式，指定输出的表示形式。</param>
+        /// <param name="freqAxis">
+        /// 方法返回时包含与频谱箱对应的频率值数组。该数组的长度与返回频谱的 bins 数相同。
+        /// </param>
+        /// <returns>
+        /// 一个 double 数组，表示输入信号的希尔伯特包络谱。数组长度与频谱箱数一致。
+        /// </returns>
+        public static double[] HilbertEnvelopeSpectra(Signal signal, Format format, out double[] freqAxis)
+        {
+            IntPtr dataPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
+            int outLength = 0;
+            int bins = 0;
+
+            int errCode = NvhInterop.HilbertEnvelopeSpectra(signal, (int)format, ref dataPtr, ref outLength, ref freqAxisPtr, ref bins);
+            Assert(errCode);
+
+            double[] data = new double[outLength];
+            Marshal.Copy(dataPtr, data, 0, outLength);
+            Marshal.FreeCoTaskMem(dataPtr);
+            freqAxis = new double[bins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, bins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
+
+            return data;
+        }
+
+        /// <summary>
+        /// 计算指定信号的希尔伯特包络平均谱，并将谱数据作为 double 数组返回。
+        /// </summary>
+        /// <param name="signal">要分析的输入信号。不能为空。</param>
+        /// <param name="calcOpt">频谱计算选项，用于决定谱线数/分辨率/帧长等。</param>
+        /// <param name="stepOpt">步进选项，用于决定时间步进或重叠。</param>
+        /// <param name="formatType">线性自功率谱（AutoPower Linear）幅值格式类型。</param>
+        /// <param name="averageType">平均方式（算术平均/能量平均/最大平均）。</param>
+        /// <param name="windowType">窗函数类型。</param>
+        /// <param name="weightType">加权类型。</param>
+        /// <param name="freqAxis">频率轴</param>
+        /// <returns>一个 double 数组，表示输入信号的希尔伯特包络谱。</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static double[] HilbertEnvelopeAvgSpectra(Signal signal, SpectraCalcOptions calcOpt, SpectraStepOptions stepOpt, Format formatType, Average averageType, Window windowType, Weight weightType, out double[] freqAxis)
+        {
+            var segmentLength = calcOpt.CalcType switch
+            {
+                SpectraCalcType.SpectrumLines => calcOpt.CalcValue * 2,
+                SpectraCalcType.Resolution => 1 / (signal.DeltaTime * calcOpt.CalcValue),
+                SpectraCalcType.FrameLength => calcOpt.CalcValue,
+                _ => throw new InvalidOperationException("Invalid SpectraCalcType"),
+            };
+
+            var overlap = stepOpt.StepType switch
+            {
+                SpectraStepType.Increment => 1 - stepOpt.StepValue / segmentLength / signal.DeltaTime,
+                SpectraStepType.Overlap => stepOpt.StepValue,
+                _ => throw new InvalidOperationException("Invalid SpectraStepType"),
+            };
+
+            IntPtr dataPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
+            int outLength = 0;
+            int bins = 0;
+
+            int errCode = NvhInterop.HilbertEnvelopeAvgSpectra(signal, (int)segmentLength, overlap, (int)formatType, (int)averageType, (int)weightType, (int)windowType, ref dataPtr, ref outLength, ref freqAxisPtr, ref bins);
+            Assert(errCode);
+
+            double[] data = new double[outLength];
+            Marshal.Copy(dataPtr, data, 0, outLength);
+            Marshal.FreeCoTaskMem(dataPtr);
+
+            freqAxis = new double[bins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, bins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
+
+            return data;
+        }
+
+        /// <summary>
         /// 使用 Morlet 小波对指定频率轴进行小波变换。
         /// </summary>
         /// <param name="signal">输入信号。</param>
@@ -462,6 +547,142 @@ namespace NvhLibCSharp
             Marshal.Copy(modulationFreqPtr, modulationFreq, 0, timeBins);
             Marshal.FreeCoTaskMem(modulationFreqPtr);
             return data;
+        }
+
+        /// <summary>
+        /// 分析音频信号的稳态响度，并返回整体响度以及在 Bark 频带上的特定响度分布。
+        /// </summary>
+        /// <remarks>
+        /// 此方法基于指定的声场执行稳态（时间不变）响度分析。特定响度数组表示在关键频带上的响度分布，可用于进一步的听觉感知分析。
+        /// </remarks>
+        /// <param name="signal">待分析的输入音频信号，不能为空。</param>
+        /// <param name="soundField">用于分析的声场配置，例如自由场或漫射场。</param>
+        /// <param name="skipInSec">分析开始前从信号起始处跳过的时长（秒），必须大于或等于 0。</param>
+        /// <param name="barkAxis">输出的 Bark 频带轴数组，表示每个频带的中心频率（Bark）。数组长度对应分析得到的 Bark 频带数量。</param>
+        /// <returns>
+        /// 返回一个元组，包含整体响度值以及每个 Bark 频带的特定响度数组。数组长度对应分析得到的 Bark 频带数量。
+        /// </returns>
+        public static (double Loudness, double[] SpecLoudness) StationaryLoudnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] barkAxis)
+        {
+            double loudness = double.NaN;
+            IntPtr specLoudnessPtr = IntPtr.Zero;
+            IntPtr barkAxisPtr = IntPtr.Zero;
+            int barkBins = int.MinValue;
+
+            int errCode = NvhInterop.StationaryLoudnessAnalyze(signal, (int)soundField, skipInSec, ref loudness, ref specLoudnessPtr, ref barkAxisPtr, ref barkBins);
+            Assert(errCode);
+
+            double[] specLoudness = new double[barkBins];
+            barkAxis = new double[barkBins];
+
+            Marshal.Copy(specLoudnessPtr, specLoudness, 0, barkBins);
+            Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
+
+            Marshal.FreeCoTaskMem(specLoudnessPtr);
+            Marshal.FreeCoTaskMem(barkAxisPtr);
+            return (loudness, specLoudness);
+        }
+
+     /// <summary>
+        /// 分析音频信号的时变响度，返回整体响度以及在时间与 Bark 频带上的特定响度数组。
+        /// </summary>
+        /// <remarks>
+        /// 返回的特定响度数组按时间主序存储：每个时间帧的所有 Bark 频带响度值连续排列。
+        /// 本方法会分配并填充输出数组；调用方需结合 Bark 轴和时间轴解释结果。
+        /// </remarks>
+        /// <param name="signal">待分析的输入音频信号。</param>
+        /// <param name="soundField">用于分析的声场配置，例如自由场或漫射场。</param>
+        /// <param name="skipInSec">分析前从信号起始处跳过的时长（秒），必须大于或等于 0。</param>
+        /// <param name="barkAxis">方法返回时包含 Bark 频率轴（Bark），长度对应 Bark 频带数量。</param>
+        /// <param name="timeAxis">方法返回时包含分析的时间轴（秒），长度对应时间帧数量。</param>
+        /// <returns>
+        /// 返回一个元组：第一个数组为每个时间帧的整体响度，第二个数组为按行主序展平的特定响度（时间帧 × Bark 频带）。
+        /// </returns>
+        public static (double[] Loudness, double[,] SpecLoudness) TimeVaryingLoudnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] barkAxis, out double[] timeAxis)
+        {
+            IntPtr loudnessPtr = IntPtr.Zero;
+            IntPtr specLoudnessPtr = IntPtr.Zero;
+            IntPtr barkAxisPtr = IntPtr.Zero;
+            IntPtr timeAxisPtr = IntPtr.Zero;
+            int timeBins = int.MinValue;
+            int barkBins = int.MinValue;
+
+            var errCode = NvhInterop.TimeVaryingLoudnessAnalyze(signal, (int)soundField, skipInSec, ref loudnessPtr, ref specLoudnessPtr, ref barkAxisPtr, ref timeAxisPtr, ref barkBins, ref timeBins);
+            Assert(errCode);
+
+            double[] loudness = new double[timeBins];
+            double[] flatSpacLoudness = new double[timeBins * barkBins];
+            double[,] specLoudness = new double[barkBins, timeBins];
+
+            barkAxis = new double[barkBins];
+            timeAxis = new double[timeBins];
+
+            Marshal.Copy(loudnessPtr, loudness, 0, timeBins);
+            Marshal.Copy(specLoudnessPtr, flatSpacLoudness, 0, timeBins * barkBins);
+            Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
+            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
+            Marshal.FreeCoTaskMem(loudnessPtr);
+            Marshal.FreeCoTaskMem(specLoudnessPtr);
+            Marshal.FreeCoTaskMem(barkAxisPtr);
+            Marshal.FreeCoTaskMem(timeAxisPtr);
+
+            for (int i = 0; i < barkBins; i++)
+            {
+                for (int j = 0; j < timeBins; j++)
+                {
+                    specLoudness[i, j] = flatSpacLoudness[j * barkBins + i];
+                }
+            }
+
+            return (loudness, specLoudness);
+        }
+
+        /// <summary>
+        /// 使用指定的锐度加权和声场参数分析音频信号的稳态锐度。
+        /// </summary>
+        /// <remarks>
+        /// 稳态锐度是一种心理声学指标，用于量化稳态声音的感知尖锐度。结果取决于所选的加权方式和声场。本方法不会修改输入信号。
+        /// </remarks>
+        /// <param name="signal">待分析的音频信号，必须包含有效的声音数据。</param>
+        /// <param name="sharpnessWeighting">用于分析的锐度加权方法，决定所采用的感知模型。</param>
+        /// <param name="soundField">执行分析的声场条件，用于描述音频环境的空间特性。</param>
+        /// <param name="skipInSec">开始分析前在信号起始处跳过的时长（秒），必须大于或等于 0。</param>
+        /// <returns>
+        /// 返回计算得到的稳态锐度值（单位：acum）。如果无法执行分析则返回 NaN。
+        /// </returns>
+        public static double StationarySharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec)
+        {
+            double sharpness = double.NaN;
+
+            NvhInterop.StationarySharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpness);
+            return sharpness;
+        }
+
+        /// <summary>
+        /// 使用指定的锐度加权和声场设置分析信号的时变锐度。
+        /// </summary>
+        /// <remarks>
+        /// 返回的锐度数组长度与时间轴数组长度一致。该方法通常用于评估音频信号中感知锐度随时间的变化。
+        /// </remarks>
+        /// <param name="signal">要分析的输入信号，不能为空。</param>
+        /// <param name="sharpnessWeighting">分析时应用的锐度加权方法。</param>
+        /// <param name="soundField">用于分析的声场配置。</param>
+        /// <param name="skipInSec">分析开始前在信号起始处跳过的时长（秒），必须大于或等于 0。</param>
+        /// <param name="timeAxis">方法返回时包含与每个锐度测量值对应的时间数组（秒）。</param>
+        /// <returns>表示信号每个时间点锐度的 double 数组。</returns>
+        public static double[] TimeVaryingSharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[] timeAxis)
+        {
+            IntPtr sharpnessPtr = IntPtr.Zero;
+            IntPtr timeAxisPtr = IntPtr.Zero;
+            int timeBins = int.MinValue;
+            NvhInterop.TimeVaryingSharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpnessPtr, ref timeAxisPtr, ref timeBins);
+            double[] sharpness = new double[timeBins];
+            timeAxis = new double[timeBins];
+            Marshal.Copy(sharpnessPtr, sharpness, 0, timeBins);
+            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
+            Marshal.FreeCoTaskMem(sharpnessPtr);
+            Marshal.FreeCoTaskMem(timeAxisPtr);
+            return sharpness;
         }
 
         /// <summary>

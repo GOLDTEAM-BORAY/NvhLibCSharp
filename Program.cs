@@ -6,8 +6,12 @@
 // #define RPM_ORDER_MAP
 // #define HILBERT
 // #define MORLET_WAVELET
-#define MORLET_WAVELET_LMS
+// #define MORLET_WAVELET_LMS
 // #define MODULATION
+// #define STATIONARY_LOUDNESS
+// #define TIME_VARYING_LOUDNESS
+// #define STATIONARY_SHARPNESS
+// #define TIME_VARYING_SHARPNESS
 
 
 using NvhLibCSharp.Interop;
@@ -138,6 +142,30 @@ namespace NvhLibCSharp
                     Console.WriteLine($"{i * timeResolution:F6}\t{heData[i]:F6}");
                 }
             }
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var heData = Nvh.HilbertEnvelopeSpectra(signal, Format.Rms, out var freq);
+
+                for (int i = 0; i < heData.Length; i++)
+                {
+                    Console.WriteLine($"{freq[i]:F6}Hz\t{heData[i]:F6}");
+                }
+            }
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var calcOpt = new SpectraCalcOptions(Enums.SpectraCalcType.Resolution, 6.25);
+                var stepOpt = new SpectraStepOptions(Enums.SpectraStepType.Overlap, 0.1);
+                var heData = Nvh.HilbertEnvelopeAvgSpectra(signal, calcOpt, stepOpt, Format.Rms, Average.Energy, Window.Hanning, Weight.A, out var freq);
+
+                for (int i = 0; i < heData.Length; i++)
+                {
+                    Console.WriteLine($"{freq[i]:F6}Hz\t{heData[i]:F6}");
+                }
+            }
 #endif
 
 #if MORLET_WAVELET
@@ -186,6 +214,60 @@ namespace NvhLibCSharp
                 for (int i = 0; i < modulationFreq.Length; i++)
                 {
                     Console.WriteLine($"{modulationFreq[i]:F6}\t{modulationDepth[i]:F6}");
+                }
+            }
+#endif
+
+#if STATIONARY_LOUDNESS
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var (loudness, specLoudness) = Nvh.StationaryLoudnessAnalyze(signal, Enums.SoundField.Free, 0.0, out var barks);
+                Console.WriteLine($"Loudness: {loudness:F6} Sones");
+                for (int i = 0; i < barks.Length; i++)
+                {
+                    Console.WriteLine($"{barks[i]:F6}\t{specLoudness[i]:F6}");
+                }
+            }
+#endif
+
+#if TIME_VARYING_LOUDNESS
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var (loudness, specLoudness) = Nvh.TimeVaryingLoudnessAnalyze(signal, Enums.SoundField.Free, 0.0, out var barks, out var times);
+                for (int i = 0; i < times.Length; i++)
+                {
+                    Console.WriteLine($"{times[i]:F6}\t{loudness[i]:F6}");
+                }
+
+                for (int i = 0; i < barks.Length; i++)
+                {
+                    Console.WriteLine($"{barks[i]:F6}\t{specLoudness[i, 0]:F6}");
+                }
+            }
+#endif
+
+#if STATIONARY_SHARPNESS
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+
+                var sharpness = Nvh.StationarySharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0);
+                Console.WriteLine($"Sharpness: {sharpness:F6} acum");
+            }
+#endif
+
+#if TIME_VARYING_SHARPNESS
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+                var sharpness = Nvh.TimeVaryingSharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0, out var times);
+                for (int i = 0; i < times.Length; i++)
+                {
+                    Console.WriteLine($"{times[i]:F6}\t{sharpness[i]:F6}");
                 }
             }
 #endif

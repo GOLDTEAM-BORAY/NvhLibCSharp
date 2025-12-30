@@ -32,6 +32,12 @@ namespace NvhLibCSharp.Interop
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelope")]
         public static partial int HilbertEnvelope(Signal signal, ref IntPtr data, ref int bins);
 
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelopeSpectra")]
+        public static partial int HilbertEnvelopeSpectra(Signal signal, int formatType, ref IntPtr data, ref int outLength, ref IntPtr freqAxis, ref int freqBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetAvgEnvelopeSpectra")]
+        public static partial int HilbertEnvelopeAvgSpectra(Signal signal, int segmentLength, double overlap, int formatType, int averageType, int weightType, int windowType, ref IntPtr data, ref int outLength, ref IntPtr freqAxis, ref int freqBins);
+
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "MorletWaveletTransform")]
         public static partial int MorletWaveletTransform(Signal signal, IntPtr frequencyAxis, int frequencyBins, double nCycles, int scaleType, double referenceValue, ref IntPtr data, ref int timeBins, ref int freqBins);
 
@@ -40,5 +46,17 @@ namespace NvhLibCSharp.Interop
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "ModulationSpectrumAnalyze")]
         public static partial int ModulationSpectrumAnalyze(Signal signal, IntPtr frequencyAxis, int frequencyBins, int scaleType, double referenceValue, ref IntPtr data, ref int timeBins, ref IntPtr modulationDepth, ref IntPtr modulationFreq);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "StationaryLoudnessAnalyze")]
+        public static partial int StationaryLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref int barkBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "TimeVaryingLoudnessAnalyze")]
+        public static partial int TimeVaryingLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref IntPtr outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref IntPtr outTimeAxis, ref int barkBins, ref int timeBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "StationarySharpnessAnalyze")]
+        public static partial int StationarySharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref double outSharpness);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "TimeVaryingSharpnessAnalyze")]
+        public static partial int TimeVaryingSharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref IntPtr outSharpness, ref IntPtr outTimeAxis, ref int timeBins);
     }
 }
