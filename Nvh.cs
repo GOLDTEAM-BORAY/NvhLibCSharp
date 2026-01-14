@@ -583,7 +583,7 @@ namespace NvhLibCSharp
             return (loudness, specLoudness);
         }
 
-     /// <summary>
+        /// <summary>
         /// 分析音频信号的时变响度，返回整体响度以及在时间与 Bark 频带上的特定响度数组。
         /// </summary>
         /// <remarks>
