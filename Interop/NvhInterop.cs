@@ -58,5 +58,11 @@ namespace NvhLibCSharp.Interop
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "TimeVaryingSharpnessAnalyze")]
         public static partial int TimeVaryingSharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref IntPtr outSharpness, ref IntPtr outTimeAxis, ref int timeBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "RoughnessAnalyze")]
+        public static partial int RoughnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outRoughness, ref IntPtr outRoughnessTimeDep, ref IntPtr outRoughnessSpec, ref IntPtr outRoughnessSpecAvg, ref IntPtr bandAxis, ref int bandBins, ref IntPtr timeAxis, ref int timeBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "FluctuationStrengthAnalyze")]
+        public static partial int FluctuationStrengthAnalyze(Signal signal, int fluctuationMethod, ref IntPtr outFluctuationTimeDep, ref IntPtr outFluctuationSpec, ref IntPtr outFluctuationSpecAvg, ref IntPtr barkAxis, ref int barkBins, ref IntPtr timeAxis, ref int timeBins);
     }
 }

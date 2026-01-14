@@ -686,6 +686,122 @@ namespace NvhLibCSharp
         }
 
         /// <summary>
+        /// 分析音频信号的粗糙度，并返回整体粗糙度值，以及随时间变化的粗糙度和粗糙度谱数据。
+        /// </summary>
+        /// <remarks>
+        /// 此方法根据指定的声场执行感知粗糙度分析。输出数组提供了详细的时域和频域信息，可用于进一步的信号特征描述或可视化。
+        /// 该方法会分配并填充输出数组；调用方在调用前无需初始化它们。
+        /// </remarks>
+        /// <param name="signal">要分析粗糙度特性的输入音频信号。</param>
+        /// <param name="soundField">用于分析的声场配置。指定听觉条件，例如单耳或双耳。</param>
+        /// <param name="skipInSec">开始分析前从信号起始处跳过的时长（秒）。必须大于或等于零。</param>
+        /// <param name="roughnessTimeDep">方法返回时，包含为信号每个时间帧计算的粗糙度值数组。</param>
+        /// <param name="roughnessSpec">方法返回时，包含表示跨频带和时间帧的粗糙度谱的二维数组。</param>
+        /// <param name="roughnessSpecAvg">方法返回时，包含整个信号每个频带的平均粗糙度值数组。</param>
+        /// <param name="bandAxis">方法返回时，包含对应于频谱分析的频带中心值数组。</param>
+        /// <param name="timeAxis">方法返回时，包含分析中对应每个时间帧的时间值数组（秒）。</param>
+        /// <returns>输入信号的整体粗糙度值，基于所有时间帧和频带计算得出。</returns>
+        public static double RoughnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] roughnessTimeDep, out double[,] roughnessSpec, out double[] roughnessSpecAvg, out double[] bandAxis, out double[] timeAxis)
+        {
+            double roughness = double.NaN;
+            IntPtr roughnessTimeDepPtr = IntPtr.Zero;
+            IntPtr roughnessSpecPtr = IntPtr.Zero;
+            IntPtr roughnessSpecAvgPtr = IntPtr.Zero;
+            IntPtr bandAxisPtr = IntPtr.Zero;
+            int bandBins = int.MinValue;
+            IntPtr timeAxisPtr = IntPtr.Zero;
+            int timeBins = int.MinValue;
+
+            NvhInterop.RoughnessAnalyze(signal, (int)soundField, skipInSec, ref roughness, ref roughnessTimeDepPtr, ref roughnessSpecPtr, ref roughnessSpecAvgPtr, ref bandAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
+
+            roughnessTimeDep = new double[timeBins];
+            Marshal.Copy(roughnessTimeDepPtr, roughnessTimeDep, 0, timeBins);
+
+            double[] flatRoughnessSpec = new double[bandBins * timeBins];
+            Marshal.Copy(roughnessSpecPtr, flatRoughnessSpec, 0, bandBins * timeBins);
+            roughnessSpec = new double[bandBins, timeBins];
+            for (int i = 0; i < bandBins; i++)
+            {
+                for (int j = 0; j < timeBins; j++)
+                {
+                    roughnessSpec[i, j] = flatRoughnessSpec[j * bandBins + i];
+                }
+            }
+
+            roughnessSpecAvg = new double[bandBins];
+            Marshal.Copy(roughnessSpecAvgPtr, roughnessSpecAvg, 0, bandBins);
+
+            bandAxis = new double[bandBins];
+            Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
+
+            timeAxis = new double[timeBins];
+            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
+
+            Marshal.FreeCoTaskMem(roughnessTimeDepPtr);
+            Marshal.FreeCoTaskMem(roughnessSpecPtr);
+            Marshal.FreeCoTaskMem(roughnessSpecAvgPtr);
+            Marshal.FreeCoTaskMem(bandAxisPtr);
+            Marshal.FreeCoTaskMem(timeAxisPtr);
+
+            return roughness;
+        }
+        
+        /// <summary>
+        /// 使用指定的方法分析指定信号的波动强度，并返回随时间变化的波动强度值。
+        /// </summary>
+        /// <remarks>输出数组由该方法分配并填充。返回数组的长度和维度取决于输入信号和所选的分析方法。此方法是线程安全的。</remarks>
+        /// <param name="signal">要进行波动强度分析的输入信号。</param>
+        /// <param name="method">应用于信号的波动分析方法。</param>
+        /// <param name="fluctuationSpec">当此方法返回时，包含一个二维数组，表示跨频带和时间帧的波动强度频谱。</param>
+        /// <param name="fluctuationSpecAvg">当此方法返回时，包含一个数组，表示每个频带的平均波动强度。</param>
+        /// <param name="bandAxis">当此方法返回时，包含一个频带值数组，对应于波动频谱的频率轴。</param>
+        /// <param name="timeAxis">当此方法返回时，包含一个时间值数组，对应于波动频谱的时间帧。</param>
+        /// <returns>一个 double 数组，表示输入信号随时间变化的波动强度。</returns>
+        public static double[] FluctuationStrengthAnalyze(Signal signal, FluctuationMethod method, out double[,] fluctuationSpec, out double[] fluctuationSpecAvg, out double[] bandAxis, out double[] timeAxis)
+        {
+            IntPtr fluctuationTimeDepPtr = IntPtr.Zero;
+            IntPtr fluctuationSpecPtr = IntPtr.Zero;
+            IntPtr fluctuationSpecAvgPtr = IntPtr.Zero;
+            IntPtr bandAxisPtr = IntPtr.Zero;
+            int bandBins = int.MinValue;
+            IntPtr timeAxisPtr = IntPtr.Zero;
+            int timeBins = int.MinValue;
+
+            NvhInterop.FluctuationStrengthAnalyze(signal, (int)method, ref fluctuationTimeDepPtr, ref fluctuationSpecPtr, ref fluctuationSpecAvgPtr, ref bandAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
+
+            double[] fluctuationTimeDep = new double[timeBins];
+            Marshal.Copy(fluctuationTimeDepPtr, fluctuationTimeDep, 0, timeBins);
+
+            double[] flatFluctuationSpec = new double[bandBins * timeBins];
+            Marshal.Copy(fluctuationSpecPtr, flatFluctuationSpec, 0, bandBins * timeBins);
+            fluctuationSpec = new double[bandBins, timeBins];
+            for (int i = 0; i < bandBins; i++)
+            {
+                for (int j = 0; j < timeBins; j++)
+                {
+                    fluctuationSpec[i, j] = flatFluctuationSpec[j * bandBins + i];
+                }
+            }
+
+            fluctuationSpecAvg = new double[bandBins];
+            Marshal.Copy(fluctuationSpecAvgPtr, fluctuationSpecAvg, 0, bandBins);
+
+            bandAxis = new double[bandBins];
+            Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
+
+            timeAxis = new double[timeBins];
+            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
+
+            Marshal.FreeCoTaskMem(fluctuationTimeDepPtr);
+            Marshal.FreeCoTaskMem(fluctuationSpecPtr);
+            Marshal.FreeCoTaskMem(fluctuationSpecAvgPtr);
+            Marshal.FreeCoTaskMem(bandAxisPtr);
+            Marshal.FreeCoTaskMem(timeAxisPtr);
+
+            return fluctuationTimeDep;
+        }
+
+        /// <summary>
         /// 根据本机错误码检索可读的错误消息。
         /// </summary>
         /// <param name="errorCode">本机接口返回的错误码（负值代表错误）。</param>
