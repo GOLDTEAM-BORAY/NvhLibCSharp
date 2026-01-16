@@ -8,10 +8,10 @@
 // #define MORLET_WAVELET
 // #define MORLET_WAVELET_LMS
 // #define MODULATION
-// #define STATIONARY_LOUDNESS
-// #define TIME_VARYING_LOUDNESS
-// #define STATIONARY_SHARPNESS
-// #define TIME_VARYING_SHARPNESS
+//#define STATIONARY_LOUDNESS
+//#define TIME_VARYING_LOUDNESS
+//#define STATIONARY_SHARPNESS
+//#define TIME_VARYING_SHARPNESS
 
 
 using NvhLibCSharp.Interop;
@@ -24,7 +24,7 @@ namespace NvhLibCSharp
     {
         static void Main(string[] args)
         {
-            Nvh.LoadLicense("D:\\测试\\LIC-20251114-3685ebd9.lic");
+            Nvh.LoadLicense("D:\\测试\\LIC-20260105-20bbbf6e.lic");
 #if OVERALL
             {
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
