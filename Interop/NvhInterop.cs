@@ -64,5 +64,8 @@ namespace NvhLibCSharp.Interop
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "FluctuationStrengthAnalyze")]
         public static partial int FluctuationStrengthAnalyze(Signal signal, int fluctuationMethod, ref IntPtr outFluctuationTimeDep, ref IntPtr outFluctuationSpec, ref IntPtr outFluctuationSpecAvg, ref IntPtr barkAxis, ref int barkBins, ref IntPtr timeAxis, ref int timeBins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "ModulationSpectrumAnalyzeStft")]
+        public static partial int ModulationSpectrumAnalyzeStft(Signal signal, int windowSize, int hopSize, int scaleType, double referenceValue, ref IntPtr data, ref IntPtr freqAxis, ref IntPtr timeAxis, ref IntPtr modulationDepth, ref IntPtr modulationFreq, ref int freqBins, ref int timeBins);
     }
 }

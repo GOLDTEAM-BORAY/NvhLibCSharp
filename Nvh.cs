@@ -550,6 +550,60 @@ namespace NvhLibCSharp
         }
 
         /// <summary>
+        /// 使用短时傅里叶变换 (STFT) 对指定信号执行调制谱分析，并返回调制谱矩阵以及频率轴、时间轴、调制深度和调制频率数组。
+        /// </summary>
+        /// <remarks>
+        /// 该方法采用基于 STFT 的分析，并根据计算出的频率仓和时间仓自动分配输出数组。
+        /// 返回的数组已对齐，确保频率轴和时间轴与调制谱矩阵的维度相对应。
+        /// <b>注意：此方法不是线程安全的。</b>
+        /// </remarks>
+        /// <param name="signal">待分析的输入信号。必须不为 null。</param>
+        /// <param name="scaleOpt">缩放选项，指定分析时使用的频率刻度和参考值。</param>
+        /// <param name="windowSize">分析窗口的大小（以采样点为单位）。必须为正整数。</param>
+        /// <param name="hopSize">连续窗口之间的滑动步长（以采样点为单位）。必须为正整数。</param>
+        /// <param name="freqAxis">当此方法返回时，包含对应于返回矩阵各行的中心频率数组。</param>
+        /// <param name="timeAxis">当此方法返回时，包含对应于返回矩阵各列的时间点数组。</param>
+        /// <param name="modulationDepth">当此方法返回时，包含代表每一时间帧调制深度的数组。</param>
+        /// <param name="modulationFreq">当此方法返回时，包含代表每一时间帧调制频率的数组。</param>
+        /// <returns>包含调制谱的二维数组，其中每个元素代表特定频率和时间仓处的谱能量。</returns>
+        public static double[,] ModulationSpectrumAnalysis(Signal signal, ScaleOptions scaleOpt, int windowSize, int hopSize, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
+        {
+            IntPtr dataPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
+            IntPtr timeAxisPtr = IntPtr.Zero;
+            IntPtr modulationDepthPtr = IntPtr.Zero;
+            IntPtr modulationFreqPtr = IntPtr.Zero;
+            int freqBins = 0;
+            int timeBins = 0;
+            int errCode = NvhInterop.ModulationSpectrumAnalyzeStft(signal, windowSize, hopSize, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref dataPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
+            Assert(errCode);
+            double[,] data = new double[freqBins, timeBins];
+            double[] flatData = new double[timeBins * freqBins];
+            Marshal.Copy(dataPtr, flatData, 0, timeBins * freqBins);
+            Marshal.FreeCoTaskMem(dataPtr);
+            for (int i = 0; i < freqBins; i++)
+            {
+                for (int j = 0; j < timeBins; j++)
+                {
+                    data[i, j] = flatData[i * timeBins + j];
+                }
+            }
+            freqAxis = new double[freqBins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, freqBins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
+            timeAxis = new double[timeBins];
+            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
+            Marshal.FreeCoTaskMem(timeAxisPtr);
+            modulationDepth = new double[timeBins];
+            Marshal.Copy(modulationDepthPtr, modulationDepth, 0, timeBins);
+            Marshal.FreeCoTaskMem(modulationDepthPtr);
+            modulationFreq = new double[timeBins];
+            Marshal.Copy(modulationFreqPtr, modulationFreq, 0, timeBins);
+            Marshal.FreeCoTaskMem(modulationFreqPtr);
+            return data;
+        }
+
+        /// <summary>
         /// 分析音频信号的稳态响度，并返回整体响度以及在 Bark 频带上的特定响度分布。
         /// </summary>
         /// <remarks>

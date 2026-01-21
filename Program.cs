@@ -8,10 +8,11 @@
 // #define MORLET_WAVELET
 // #define MORLET_WAVELET_LMS
 // #define MODULATION
-//#define STATIONARY_LOUDNESS
-//#define TIME_VARYING_LOUDNESS
-//#define STATIONARY_SHARPNESS
-//#define TIME_VARYING_SHARPNESS
+// #define MODULATION_STFT
+// #define STATIONARY_LOUDNESS
+// #define TIME_VARYING_LOUDNESS
+// #define STATIONARY_SHARPNESS
+// #define TIME_VARYING_SHARPNESS
 
 
 using NvhLibCSharp.Interop;
@@ -214,6 +215,21 @@ namespace NvhLibCSharp
                 for (int i = 0; i < modulationFreq.Length; i++)
                 {
                     Console.WriteLine($"{modulationFreq[i]:F6}\t{modulationDepth[i]:F6}");
+                }
+            }
+#endif
+
+#if MODULATION_STFT
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200.0);
+                var scaleOpt = new ScaleOptions(Scale.Linear, 2e-5);
+
+                var tf = Nvh.ModulationSpectrumAnalysis(signal, scaleOpt, 8192, 256, out var freqAxis, out var timeAxis, out var modDep, out var modFreq);
+
+                for (int i = 0; i < modFreq.Length; i++)
+                {
+                    Console.WriteLine($"{modFreq[i]:F6}\t{modDep[i]:F6}");
                 }
             }
 #endif
