@@ -338,14 +338,14 @@ namespace NvhLibCSharp
         /// <returns>
         /// 一个 double 数组，表示输入信号的希尔伯特包络谱。数组长度与频谱箱数一致。
         /// </returns>
-        public static double[] HilbertEnvelopeSpectra(Signal signal, Format format, out double[] freqAxis)
+        public static double[] HilbertEnvelopeSpectra(Signal signal, Window window, Format format, out double[] freqAxis)
         {
             IntPtr dataPtr = IntPtr.Zero;
             IntPtr freqAxisPtr = IntPtr.Zero;
             int outLength = 0;
             int bins = 0;
 
-            int errCode = NvhInterop.HilbertEnvelopeSpectra(signal, (int)format, ref dataPtr, ref outLength, ref freqAxisPtr, ref bins);
+            int errCode = NvhInterop.HilbertEnvelopeSpectra(signal, (int)window, (int)format, ref dataPtr, ref outLength, ref freqAxisPtr, ref bins);
             Assert(errCode);
 
             double[] data = new double[outLength];

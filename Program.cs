@@ -147,7 +147,7 @@ namespace NvhLibCSharp
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
                 var signal = new Signal(sample, 1.0 / 51200);
 
-                var heData = Nvh.HilbertEnvelopeSpectra(signal, Format.Rms, out var freq);
+                var heData = Nvh.HilbertEnvelopeSpectra(signal, Window.Hanning, Format.Rms, out var freq);
 
                 for (int i = 0; i < heData.Length; i++)
                 {

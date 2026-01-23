@@ -33,7 +33,7 @@ namespace NvhLibCSharp.Interop
         public static partial int HilbertEnvelope(Signal signal, ref IntPtr data, ref int bins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelopeSpectra")]
-        public static partial int HilbertEnvelopeSpectra(Signal signal, int formatType, ref IntPtr data, ref int outLength, ref IntPtr freqAxis, ref int freqBins);
+        public static partial int HilbertEnvelopeSpectra(Signal signal, int windowType, int formatType, ref IntPtr data, ref int outLength, ref IntPtr freqAxis, ref int freqBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetAvgEnvelopeSpectra")]
         public static partial int HilbertEnvelopeAvgSpectra(Signal signal, int segmentLength, double overlap, int formatType, int averageType, int weightType, int windowType, ref IntPtr data, ref int outLength, ref IntPtr freqAxis, ref int freqBins);
