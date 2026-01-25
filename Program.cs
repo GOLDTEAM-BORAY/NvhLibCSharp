@@ -13,6 +13,7 @@
 // #define TIME_VARYING_LOUDNESS
 // #define STATIONARY_SHARPNESS
 // #define TIME_VARYING_SHARPNESS
+#define ROUGHNESS
 
 
 using NvhLibCSharp.Interop;
@@ -284,6 +285,31 @@ namespace NvhLibCSharp
                 for (int i = 0; i < times.Length; i++)
                 {
                     Console.WriteLine($"{times[i]:F6}\t{sharpness[i]:F6}");
+                }
+            }
+#endif
+
+#if ROUGHNESS
+            {
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(sample, 1.0 / 51200);
+                var roughness = Nvh.RoughnessAnalyze(signal, Enums.SoundField.Free, 0.3, out var timeVaringRoughness, out var specificRoughness, out var stationaryRoughness, out var bandAxis, out var barkAxis, out var timeAxis);
+                Console.WriteLine($"Roughness: {roughness:F6} Asper");
+                for (int i = 0; i < bandAxis.Length; i++)
+                {
+                    for (int j = 0; j < timeAxis.Length; j++)
+                    {
+                        Console.Write($"{specificRoughness[i, j]:F6}\t");
+                    }
+                    Console.WriteLine();
+                }
+                for (int i = 0; i < timeAxis.Length; i++)
+                {
+                    Console.WriteLine($"{timeAxis[i]:F6}\t{timeVaringRoughness[i]:F6}");
+                }
+                for (int i = 0; i < bandAxis.Length; i++)
+                {
+                    Console.WriteLine($"{barkAxis[i]:F6}\t{stationaryRoughness[i]:F6}");
                 }
             }
 #endif

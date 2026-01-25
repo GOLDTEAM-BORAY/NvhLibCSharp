@@ -755,18 +755,19 @@ namespace NvhLibCSharp
         /// <param name="bandAxis">方法返回时，包含对应于频谱分析的频带中心值数组。</param>
         /// <param name="timeAxis">方法返回时，包含分析中对应每个时间帧的时间值数组（秒）。</param>
         /// <returns>输入信号的整体粗糙度值，基于所有时间帧和频带计算得出。</returns>
-        public static double RoughnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] roughnessTimeDep, out double[,] roughnessSpec, out double[] roughnessSpecAvg, out double[] bandAxis, out double[] timeAxis)
+        public static double RoughnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] roughnessTimeDep, out double[,] roughnessSpec, out double[] roughnessSpecAvg, out double[] bandAxis, out double[] barkAxis, out double[] timeAxis)
         {
             double roughness = double.NaN;
             IntPtr roughnessTimeDepPtr = IntPtr.Zero;
             IntPtr roughnessSpecPtr = IntPtr.Zero;
             IntPtr roughnessSpecAvgPtr = IntPtr.Zero;
             IntPtr bandAxisPtr = IntPtr.Zero;
+            IntPtr barkAxisPtr = IntPtr.Zero;
             int bandBins = int.MinValue;
             IntPtr timeAxisPtr = IntPtr.Zero;
             int timeBins = int.MinValue;
 
-            NvhInterop.RoughnessAnalyze(signal, (int)soundField, skipInSec, ref roughness, ref roughnessTimeDepPtr, ref roughnessSpecPtr, ref roughnessSpecAvgPtr, ref bandAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
+            NvhInterop.RoughnessAnalyze(signal, (int)soundField, skipInSec, ref roughness, ref roughnessTimeDepPtr, ref roughnessSpecPtr, ref roughnessSpecAvgPtr, ref bandAxisPtr, ref barkAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
 
             roughnessTimeDep = new double[timeBins];
             Marshal.Copy(roughnessTimeDepPtr, roughnessTimeDep, 0, timeBins);
@@ -778,7 +779,7 @@ namespace NvhLibCSharp
             {
                 for (int j = 0; j < timeBins; j++)
                 {
-                    roughnessSpec[i, j] = flatRoughnessSpec[j * bandBins + i];
+                    roughnessSpec[i, j] = flatRoughnessSpec[i * timeBins + j];
                 }
             }
 
@@ -787,6 +788,9 @@ namespace NvhLibCSharp
 
             bandAxis = new double[bandBins];
             Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
+
+            barkAxis = new double[bandBins];
+            Marshal.Copy(barkAxisPtr, barkAxis, 0, bandBins);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
