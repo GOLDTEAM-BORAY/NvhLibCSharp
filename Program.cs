@@ -13,7 +13,7 @@
 // #define TIME_VARYING_LOUDNESS
 // #define STATIONARY_SHARPNESS
 // #define TIME_VARYING_SHARPNESS
-#define ROUGHNESS
+// #define ROUGHNESS
 
 
 using NvhLibCSharp.Interop;
@@ -226,7 +226,7 @@ namespace NvhLibCSharp
                 var signal = new Signal(sample, 1.0 / 51200.0);
                 var scaleOpt = new ScaleOptions(Scale.Linear, 2e-5);
 
-                var tf = Nvh.ModulationSpectrumAnalysis(signal, scaleOpt, 8192, 256, out var freqAxis, out var timeAxis, out var modDep, out var modFreq);
+                var tf = Nvh.ModulationSpectrumAnalysis(signal, scaleOpt, 51200, 5120, out var freqAxis, out var timeAxis, out var modDep, out var modFreq);
 
                 for (int i = 0; i < modFreq.Length; i++)
                 {
