@@ -7,7 +7,7 @@
 // #define HILBERT
 // #define MORLET_WAVELET
 // #define MORLET_WAVELET_LMS
-// #define MODULATION
+ #define MODULATION
 // #define MODULATION_STFT
 // #define STATIONARY_LOUDNESS
 // #define TIME_VARYING_LOUDNESS
@@ -205,33 +205,25 @@ namespace NvhLibCSharp
 
 #if MODULATION
             {
-                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\chirp.txt");
                 var signal = new Signal(sample, 1.0 / 51200.0);
 
-                var frequencyAxis = MathUtils.Linspace(1, 100, 100);
-                var scaleOpt = new ScaleOptions(Scale.Db, 2e-5);
+                var scaleOpt = new ScaleOptions(Scale.Db, 1.0 / 150);
+                var spectrogram = Nvh.ModulationSpectrumAnalysis(signal, 1.0, scaleOpt, out var freqAxis, out var timeAxis, out var modulationDepth, out var modulationFreq);
 
-                var tf = Nvh.ModulationSpectrumAnalysis(signal, scaleOpt, [.. frequencyAxis], out var modulationDepth, out var modulationFreq);
-
-                for (int i = 0; i < modulationFreq.Length; i++)
-                {
-                    Console.WriteLine($"{modulationFreq[i]:F6}\t{modulationDepth[i]:F6}");
-                }
+                PlotHelper.PlotColormap("figures/modulation_spectrogram_morlet.png", spectrogram, timeAxis, freqAxis, 0, 40);
             }
 #endif
 
 #if MODULATION_STFT
             {
-                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\chirp.txt");
                 var signal = new Signal(sample, 1.0 / 51200.0);
-                var scaleOpt = new ScaleOptions(Scale.Linear, 2e-5);
+                var scaleOpt = new ScaleOptions(Scale.Db, 1.0 / 150);
 
                 var tf = Nvh.ModulationSpectrumAnalysis(signal, scaleOpt, 51200, 5120, out var freqAxis, out var timeAxis, out var modDep, out var modFreq);
 
-                for (int i = 0; i < modFreq.Length; i++)
-                {
-                    Console.WriteLine($"{modFreq[i]:F6}\t{modDep[i]:F6}");
-                }
+                PlotHelper.PlotColormap("figures/modulation_spectrogram_stft.png", tf, timeAxis, freqAxis, 0, 40);
             }
 #endif
 

@@ -518,35 +518,51 @@ namespace NvhLibCSharp
         /// 本方法在非托管内存中为频率轴分配缓冲区并在完成后释放；输出的 <paramref name="modulationDepth"/> 与 <paramref name="modulationFreq"/> 长度等于时间箱数（timeBins）。
         /// </remarks>
         /// <exception cref="InvalidOperationException">当本机库返回错误码时抛出，消息来自 <see cref="GetLastErrorMessage(int)"/>。</exception>
-        public static double[,] ModulationSpectrumAnalysis(Signal signal, ScaleOptions scaleOpt, double[] frequencyAxis, out double[] modulationDepth, out double[] modulationFreq)
+        public static double[,] ModulationSpectrumAnalysis(Signal signal, double frequencyResolution, ScaleOptions scaleOpt, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
         {
-            IntPtr freqAxisPtr = Marshal.AllocCoTaskMem(frequencyAxis.Length * sizeof(double));
-            Marshal.Copy(frequencyAxis, 0, freqAxisPtr, frequencyAxis.Length);
-            IntPtr dataPtr = IntPtr.Zero;
+            // 0. 分配指针变量
+            IntPtr spectrogramPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
+            IntPtr timeAxisPtr = IntPtr.Zero;
             IntPtr modulationDepthPtr = IntPtr.Zero;
             IntPtr modulationFreqPtr = IntPtr.Zero;
+            int freqBins = 0;
             int timeBins = 0;
-            int errCode = NvhInterop.ModulationSpectrumAnalyze(signal, freqAxisPtr, frequencyAxis.Length, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref dataPtr, ref timeBins, ref modulationDepthPtr, ref modulationFreqPtr);
+
+            // 1. 调用本机方法
+            int errCode = NvhInterop.ModulationSpectrumAnalyze(signal, frequencyResolution, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref spectrogramPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
             Assert(errCode);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
-            double[,] data = new double[frequencyAxis.Length, timeBins];
-            double[] flatData = new double[timeBins * frequencyAxis.Length];
-            Marshal.Copy(dataPtr, flatData, 0, timeBins * frequencyAxis.Length);
-            Marshal.FreeCoTaskMem(dataPtr);
-            for (int i = 0; i < frequencyAxis.Length; i++)
+
+            // 2. 复制数据到托管内存并释放本机内存
+            double[,] spectrogram = new double[freqBins, timeBins];
+            int totalElements = timeBins * freqBins;
+            unsafe
             {
-                for (int j = 0; j < timeBins; j++)
+                fixed (double* pDest = spectrogram) // 获取托管数组的内存指针
                 {
-                    data[i, j] = flatData[i * timeBins + j];
+                    long bytesToCopy = (long)totalElements * sizeof(double);
+                    Buffer.MemoryCopy((void*)spectrogramPtr, pDest, bytesToCopy, bytesToCopy);
                 }
             }
+            Marshal.FreeCoTaskMem(spectrogramPtr);
+
+            freqAxis = new double[freqBins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, freqBins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
+
+            timeAxis = new double[timeBins];
+            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
+            Marshal.FreeCoTaskMem(timeAxisPtr);
+
             modulationDepth = new double[timeBins];
             Marshal.Copy(modulationDepthPtr, modulationDepth, 0, timeBins);
             Marshal.FreeCoTaskMem(modulationDepthPtr);
+
             modulationFreq = new double[timeBins];
             Marshal.Copy(modulationFreqPtr, modulationFreq, 0, timeBins);
             Marshal.FreeCoTaskMem(modulationFreqPtr);
-            return data;
+
+            return spectrogram;
         }
 
         /// <summary>
@@ -568,39 +584,46 @@ namespace NvhLibCSharp
         /// <returns>包含调制谱的二维数组，其中每个元素代表特定频率和时间仓处的谱能量。</returns>
         public static double[,] ModulationSpectrumAnalysis(Signal signal, ScaleOptions scaleOpt, int windowSize, int hopSize, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
         {
-            IntPtr dataPtr = IntPtr.Zero;
+            IntPtr spectrogramPtr = IntPtr.Zero;
             IntPtr freqAxisPtr = IntPtr.Zero;
             IntPtr timeAxisPtr = IntPtr.Zero;
             IntPtr modulationDepthPtr = IntPtr.Zero;
             IntPtr modulationFreqPtr = IntPtr.Zero;
             int freqBins = 0;
             int timeBins = 0;
-            int errCode = NvhInterop.ModulationSpectrumAnalyzeStft(signal, windowSize, hopSize, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref dataPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
+
+            int errCode = NvhInterop.ModulationSpectrumAnalyzeStft(signal, windowSize, hopSize, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref spectrogramPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
             Assert(errCode);
-            double[,] data = new double[freqBins, timeBins];
-            double[] flatData = new double[timeBins * freqBins];
-            Marshal.Copy(dataPtr, flatData, 0, timeBins * freqBins);
-            Marshal.FreeCoTaskMem(dataPtr);
-            for (int i = 0; i < freqBins; i++)
+
+            double[,] spectrogram = new double[freqBins, timeBins];
+            int totalElements = timeBins * freqBins;
+            unsafe
             {
-                for (int j = 0; j < timeBins; j++)
+                fixed (double* pDest = spectrogram) // 获取托管数组的内存指针
                 {
-                    data[i, j] = flatData[i * timeBins + j];
+                    long bytesToCopy = (long)totalElements * sizeof(double);
+                    Buffer.MemoryCopy((void*)spectrogramPtr, pDest, bytesToCopy, bytesToCopy);
                 }
             }
+            Marshal.FreeCoTaskMem(spectrogramPtr);
+
             freqAxis = new double[freqBins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, freqBins);
             Marshal.FreeCoTaskMem(freqAxisPtr);
+
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
             Marshal.FreeCoTaskMem(timeAxisPtr);
+
             modulationDepth = new double[timeBins];
             Marshal.Copy(modulationDepthPtr, modulationDepth, 0, timeBins);
             Marshal.FreeCoTaskMem(modulationDepthPtr);
+
             modulationFreq = new double[timeBins];
             Marshal.Copy(modulationFreqPtr, modulationFreq, 0, timeBins);
             Marshal.FreeCoTaskMem(modulationFreqPtr);
-            return data;
+
+            return spectrogram;
         }
 
         /// <summary>
@@ -763,42 +786,42 @@ namespace NvhLibCSharp
             IntPtr roughnessSpecAvgPtr = IntPtr.Zero;
             IntPtr bandAxisPtr = IntPtr.Zero;
             IntPtr barkAxisPtr = IntPtr.Zero;
-            int bandBins = int.MinValue;
             IntPtr timeAxisPtr = IntPtr.Zero;
+            int bandBins = int.MinValue;
             int timeBins = int.MinValue;
 
             NvhInterop.RoughnessAnalyze(signal, (int)soundField, skipInSec, ref roughness, ref roughnessTimeDepPtr, ref roughnessSpecPtr, ref roughnessSpecAvgPtr, ref bandAxisPtr, ref barkAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
 
             roughnessTimeDep = new double[timeBins];
             Marshal.Copy(roughnessTimeDepPtr, roughnessTimeDep, 0, timeBins);
+            Marshal.FreeCoTaskMem(roughnessTimeDepPtr);
 
-            double[] flatRoughnessSpec = new double[bandBins * timeBins];
-            Marshal.Copy(roughnessSpecPtr, flatRoughnessSpec, 0, bandBins * timeBins);
             roughnessSpec = new double[bandBins, timeBins];
-            for (int i = 0; i < bandBins; i++)
+            int totalElements = bandBins * timeBins;
+            unsafe
             {
-                for (int j = 0; j < timeBins; j++)
+                fixed (double* pDest = roughnessSpec)
                 {
-                    roughnessSpec[i, j] = flatRoughnessSpec[i * timeBins + j];
+                    long bytesToCopy = (long)(bandBins * timeBins) * sizeof(double);
+                    Buffer.MemoryCopy((void*)roughnessSpecPtr, pDest, bytesToCopy, bytesToCopy);
                 }
             }
+            Marshal.FreeCoTaskMem(roughnessSpecPtr);
 
             roughnessSpecAvg = new double[bandBins];
             Marshal.Copy(roughnessSpecAvgPtr, roughnessSpecAvg, 0, bandBins);
+            Marshal.FreeCoTaskMem(roughnessSpecAvgPtr);
 
             bandAxis = new double[bandBins];
             Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
+            Marshal.FreeCoTaskMem(bandAxisPtr);
 
             barkAxis = new double[bandBins];
             Marshal.Copy(barkAxisPtr, barkAxis, 0, bandBins);
+            Marshal.FreeCoTaskMem(barkAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-
-            Marshal.FreeCoTaskMem(roughnessTimeDepPtr);
-            Marshal.FreeCoTaskMem(roughnessSpecPtr);
-            Marshal.FreeCoTaskMem(roughnessSpecAvgPtr);
-            Marshal.FreeCoTaskMem(bandAxisPtr);
             Marshal.FreeCoTaskMem(timeAxisPtr);
 
             return roughness;

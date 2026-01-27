@@ -45,7 +45,7 @@ namespace NvhLibCSharp.Interop
         public static partial int LmsMorletWaveletTransform(Signal signal, double minFreq, double maxFreq, int octave, int scaleType, double referenceValue, ref IntPtr data, ref int timeBins, ref IntPtr freqAxis, ref int freqBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "ModulationSpectrumAnalyze")]
-        public static partial int ModulationSpectrumAnalyze(Signal signal, IntPtr frequencyAxis, int frequencyBins, int scaleType, double referenceValue, ref IntPtr data, ref int timeBins, ref IntPtr modulationDepth, ref IntPtr modulationFreq);
+        public static partial int ModulationSpectrumAnalyze(Signal signal, double frequencyResolution, int scaleType, double referenceValue, ref IntPtr spectrogram, ref IntPtr freqAxis, ref IntPtr timeAxis, ref IntPtr modulationDepth, ref IntPtr modulationFreq, ref int freqBins, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "StationaryLoudnessAnalyze")]
         public static partial int StationaryLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref int barkBins);
@@ -66,6 +66,6 @@ namespace NvhLibCSharp.Interop
         public static partial int FluctuationStrengthAnalyze(Signal signal, int fluctuationMethod, ref IntPtr outFluctuationTimeDep, ref IntPtr outFluctuationSpec, ref IntPtr outFluctuationSpecAvg, ref IntPtr barkAxis, ref int barkBins, ref IntPtr timeAxis, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "ModulationSpectrumAnalyzeStft")]
-        public static partial int ModulationSpectrumAnalyzeStft(Signal signal, int windowSize, int hopSize, int scaleType, double referenceValue, ref IntPtr data, ref IntPtr freqAxis, ref IntPtr timeAxis, ref IntPtr modulationDepth, ref IntPtr modulationFreq, ref int freqBins, ref int timeBins);
+        public static partial int ModulationSpectrumAnalyzeStft(Signal signal, int windowSize, int hopSize, int scaleType, double referenceValue, ref IntPtr spectrogram, ref IntPtr freqAxis, ref IntPtr timeAxis, ref IntPtr modulationDepth, ref IntPtr modulationFreq, ref int freqBins, ref int timeBins);
     }
 }
