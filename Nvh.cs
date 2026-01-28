@@ -324,6 +324,50 @@ namespace NvhLibCSharp
         }
 
         /// <summary>
+        /// 计算固定带/跟踪带包络线（Hilbert Envelope Ex）。
+        /// </summary>
+        /// <param name="signal">时域波形</param>
+        /// <param name="options">包络选项</param>
+        /// <returns>包络线</returns>
+        public static double[] HilbertEnvelopeEx(Signal signal, EnvelopeExOptions options)
+        {
+            IntPtr dataPtr = IntPtr.Zero;
+            int bins = 0;
+
+            if (options.Type == EnvelopeExOptions.BandType.Fixed)
+            {
+                int errorCode = NvhInterop.HilbertEnvelopeExFixed(signal, options.CenterFrequency, options.BandwidthFixed, ref dataPtr, ref bins);
+                Assert(errorCode);
+
+                double[] data = new double[bins];
+                Marshal.Copy(dataPtr, data, 0, bins);
+                Marshal.FreeCoTaskMem(dataPtr);
+                return data;
+            }
+
+            var rpmPtr = IntPtr.Zero;
+            try
+            {
+                rpmPtr = Marshal.AllocCoTaskMem(options.Rpm.Length * Marshal.SizeOf<double>());
+                Marshal.Copy(options.Rpm, 0, rpmPtr, options.Rpm.Length);
+                int errorCode = NvhInterop.HilbertEnvelopeExTracked(signal, rpmPtr, options.Rpm.Length, options.CenterOrder, options.BandwidthFixed, options.WindowLength, options.MinFrequency, options.MaxFrequency, ref dataPtr, ref bins);
+                Assert(errorCode);
+
+                double[] data = new double[bins];
+                Marshal.Copy(dataPtr, data, 0, bins);
+                Marshal.FreeCoTaskMem(dataPtr);
+                return data;
+            }
+            finally
+            {
+                if (rpmPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeCoTaskMem(rpmPtr);
+                }
+            }
+        }
+
+        /// <summary>
         /// 计算指定信号的希尔伯特包络谱，并将谱数据作为 double 数组返回。
         /// </summary>
         /// <remarks>

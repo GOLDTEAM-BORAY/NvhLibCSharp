@@ -5,16 +5,16 @@
 // #define RPM_FREQ_MAP
 // #define RPM_ORDER_MAP
 // #define HILBERT
+#define HILBERT_EX
 // #define MORLET_WAVELET
 // #define MORLET_WAVELET_LMS
- #define MODULATION
+// #define MODULATION
 // #define MODULATION_STFT
 // #define STATIONARY_LOUDNESS
 // #define TIME_VARYING_LOUDNESS
 // #define STATIONARY_SHARPNESS
 // #define TIME_VARYING_SHARPNESS
 // #define ROUGHNESS
-
 
 using NvhLibCSharp.Interop;
 using NvhLibCSharp.Options;
@@ -303,6 +303,24 @@ namespace NvhLibCSharp
                 {
                     Console.WriteLine($"{barkAxis[i]:F6}\t{stationaryRoughness[i]:F6}");
                 }
+            }
+#endif
+
+#if HILBERT_EX
+            {
+                var samples = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
+                var rpm = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\speed_0.txt");
+                var signal = new Signal(samples, 1.0 / 51200);
+
+                var fixedOptions = new EnvelopeExOptions(700, 1050);
+                var fixedEnvlope = Nvh.HilbertEnvelopeEx(signal, fixedOptions);
+
+                var trackedOptions = new EnvelopeExOptions(2.0, 1000, 4096, 100, 4000, rpm);
+                var trackedEnvlope = Nvh.HilbertEnvelopeEx(signal, trackedOptions);
+
+                var timeVector = Enumerable.Range(0, fixedEnvlope.Length).Select(i => i * signal.DeltaTime).ToArray();
+                PlotHelper.PlotFigure("figures/hilbert_envelope_ex_fixed.png", timeVector, [(fixedEnvlope, "Fixed Bandwidth Envelope")]);
+                PlotHelper.PlotFigure("figures/hilbert_envelope_ex_tracked.png", timeVector, [(trackedEnvlope, "Tracked Bandwidth Envelope")]);
             }
 #endif
         }

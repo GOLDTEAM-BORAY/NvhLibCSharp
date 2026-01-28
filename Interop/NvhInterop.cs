@@ -32,6 +32,12 @@ namespace NvhLibCSharp.Interop
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelope")]
         public static partial int HilbertEnvelope(Signal signal, ref IntPtr data, ref int bins);
 
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelopeExFixed")]
+        public static partial int HilbertEnvelopeExFixed(Signal signal, double centerFrequency, double bandwidth, ref IntPtr data, ref int bins);
+
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelopeExTracked")]
+        public static partial int HilbertEnvelopeExTracked(Signal signal, IntPtr rpm, int rpmBins, double centerOrder, double bandwidth, int windowLength, double minFreq, double maxFreq, ref IntPtr data, ref int bins);
+
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetEnvelopeSpectra")]
         public static partial int HilbertEnvelopeSpectra(Signal signal, int windowType, int formatType, ref IntPtr data, ref int outLength, ref IntPtr freqAxis, ref int freqBins);
 
