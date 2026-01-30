@@ -5,7 +5,7 @@
 // #define RPM_FREQ_MAP
 // #define RPM_ORDER_MAP
 // #define HILBERT
-#define HILBERT_EX
+// #define HILBERT_EX
 // #define MORLET_WAVELET
 // #define MORLET_WAVELET_LMS
 // #define MODULATION
@@ -15,6 +15,7 @@
 // #define STATIONARY_SHARPNESS
 // #define TIME_VARYING_SHARPNESS
 // #define ROUGHNESS
+#define OCTAVE
 
 using NvhLibCSharp.Interop;
 using NvhLibCSharp.Options;
@@ -321,6 +322,22 @@ namespace NvhLibCSharp
                 var timeVector = Enumerable.Range(0, fixedEnvlope.Length).Select(i => i * signal.DeltaTime).ToArray();
                 PlotHelper.PlotFigure("figures/hilbert_envelope_ex_fixed.png", timeVector, [(fixedEnvlope, "Fixed Bandwidth Envelope")]);
                 PlotHelper.PlotFigure("figures/hilbert_envelope_ex_tracked.png", timeVector, [(trackedEnvlope, "Tracked Bandwidth Envelope")]);
+            }
+#endif
+
+#if OCTAVE
+            {
+                var samples = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
+                var signal = new Signal(samples, 1.0 / 51200);
+                var spectraOpt = new SpectraCalcOptions(Enums.SpectraCalcType.SpectrumLines, 4096);
+                var stepOpt = new SpectraStepOptions(Enums.SpectraStepType.Overlap, 0.5);
+                var scaleOpt = new ScaleOptions(Scale.Linear, 1);
+                var spectra = Nvh.AveragedSpectrum(signal, spectraOpt, stepOpt, scaleOpt, Format.Rms, Average.Energy, Window.Hanning, Weight.Linear);
+                var deltaF = 51200 / 2 / 4096;
+
+                var bandLevels = Nvh.Octave(spectra, deltaF, Window.Hanning, Enums.Octave.ThirdOctave, new ScaleOptions(Scale.Db, 1.0), out var bandCenter, out _, out _);
+
+                PlotHelper.PlotFigure("figures/octave_spectrum.png", bandCenter, [(bandLevels, "Third Octave Band Levels")]);
             }
 #endif
         }

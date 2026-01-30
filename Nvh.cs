@@ -63,6 +63,53 @@ namespace NvhLibCSharp
         }
 
         /// <summary>
+        /// 对给定的幅度谱执行倍频程（Octave）分析。
+        /// <para>
+        /// 该方法调用底层非托管代码，根据指定的频率分辨率、窗函数和缩放选项，
+        /// 将窄带频谱转换为 1/1、1/3 或其他分数的倍频程频谱。
+        /// </para>
+        /// </summary>
+        /// <param name="amplitudeSpectra">输入的幅度谱数据数组（通常由 FFT 变换得到）。</param>
+        /// <param name="frequencyStep">频谱的频率分辨率（Δf），即数组中相邻两个数据点之间的频率差（Hz）。</param>
+        /// <param name="window">计算频谱时所使用的窗函数类型（用于修正能量泄漏等）。</param>
+        /// <param name="octave">倍频程分辨率设置（例如：1/1 全倍频程、1/3 倍频程等）。</param>
+        /// <param name="scale">缩放和单位选项，包含刻度类型（如 Linear, dB）及参考值。</param>
+        /// <param name="bandCenters">[输出] 计算得出的各频带中心频率数组。</param>
+        /// <param name="bandLowers">[输出] 计算得出的各频带下截止频率数组。</param>
+        /// <param name="bandUppers">[输出] 计算得出的各频带上截止频率数组。</param>
+        /// <returns>计算得出的倍频程频带（Band Levels）数组。</returns>
+        public static double[] Octave(double[] amplitudeSpectra, double frequencyStep, Window window, Octave octave, ScaleOptions scale, out double[] bandCenters, out double[] bandLowers, out double[] bandUppers)
+        {
+            IntPtr bandLevelsPtr = IntPtr.Zero;
+            IntPtr bandCentersPtr = IntPtr.Zero;
+            IntPtr bandLowersPtr = IntPtr.Zero;
+            IntPtr bandUppersPtr = IntPtr.Zero;
+            int bandCount = 0;
+
+            var spectraPtr = amplitudeSpectra.ToIntPtr(out var spectraLength);
+            int errCode = NvhInterop.Octave(spectraPtr, spectraLength, frequencyStep, (int)window, (int)octave, (int)scale.Scale, scale.ReferenceValue, ref bandLevelsPtr, ref bandCentersPtr, ref bandLowersPtr, ref bandUppersPtr, ref bandCount);
+            Assert(errCode);
+
+            double[] bandLevels = new double[bandCount];
+            Marshal.Copy(bandLevelsPtr, bandLevels, 0, bandCount);
+            Marshal.FreeCoTaskMem(bandLevelsPtr);
+
+            bandCenters = new double[bandCount];
+            Marshal.Copy(bandCentersPtr, bandCenters, 0, bandCount);
+            Marshal.FreeCoTaskMem(bandCentersPtr);
+
+            bandLowers = new double[bandCount];
+            Marshal.Copy(bandLowersPtr, bandLowers, 0, bandCount);
+            Marshal.FreeCoTaskMem(bandLowersPtr);
+
+            bandUppers = new double[bandCount];
+            Marshal.Copy(bandUppersPtr, bandUppers, 0, bandCount);
+            Marshal.FreeCoTaskMem(bandUppersPtr);
+
+            return bandLevels;
+        }
+
+        /// <summary>
         /// 计算给定转速范围与步长下的阶次截面（Order Section）。
         /// </summary>
         /// <param name="signal">输入信号。</param>
