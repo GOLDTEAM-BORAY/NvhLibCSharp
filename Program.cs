@@ -8,8 +8,8 @@
 // #define HILBERT_EX
 // #define MORLET_WAVELET
 // #define MORLET_WAVELET_LMS
-// #define MODULATION
-// #define MODULATION_STFT
+#define MODULATION
+#define MODULATION_STFT
 // #define STATIONARY_LOUDNESS
 // #define TIME_VARYING_LOUDNESS
 // #define STATIONARY_SHARPNESS
@@ -210,7 +210,7 @@ namespace NvhLibCSharp
                 var signal = new Signal(sample, 1.0 / 51200.0);
 
                 var scaleOpt = new ScaleOptions(Scale.Db, 1.0 / 150);
-                var spectrogram = Nvh.ModulationSpectrumAnalysis(signal, 1.0, scaleOpt, out var freqAxis, out var timeAxis, out var modulationDepth, out var modulationFreq);
+                var spectrogram = Nvh.ModulationSpectrumAnalysis(signal, 1.0, 150.0, scaleOpt, out var freqAxis, out var timeAxis, out var modulationDepth, out var modulationFreq);
 
                 PlotHelper.PlotColormap("figures/modulation_spectrogram_morlet.png", spectrogram, timeAxis, freqAxis, 0, 40);
             }
@@ -222,7 +222,7 @@ namespace NvhLibCSharp
                 var signal = new Signal(sample, 1.0 / 51200.0);
                 var scaleOpt = new ScaleOptions(Scale.Db, 1.0 / 150);
 
-                var tf = Nvh.ModulationSpectrumAnalysis(signal, scaleOpt, 51200, 5120, out var freqAxis, out var timeAxis, out var modDep, out var modFreq);
+                var tf = Nvh.ModulationSpectrumAnalysis(signal, 51200, 5120, 150.0, scaleOpt, out var freqAxis, out var timeAxis, out var modDep, out var modFreq);
 
                 PlotHelper.PlotColormap("figures/modulation_spectrogram_stft.png", tf, timeAxis, freqAxis, 0, 40);
             }

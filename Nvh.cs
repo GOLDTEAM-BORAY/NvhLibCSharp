@@ -598,8 +598,9 @@ namespace NvhLibCSharp
         /// 对给定频率轴执行调制谱分析（Modulation Spectrum Analysis）。
         /// </summary>
         /// <param name="signal">输入信号。</param>
+        /// <param name="frequencyResolution">频率分辨率（以赫兹为单位）。</param>
+        /// <param name="cutoffFreq">调制频率的截止频率（以赫兹为单位）。</param>
         /// <param name="scaleOpt">dB/Lin选项，指定输出数据的db/Lin类型和参考值。</param>
-        /// <param name="frequencyAxis">要分析的频率轴数组（赫兹）。</param>
         /// <param name="modulationDepth">输出的调制深度数组，对应时间轴的每个点。</param>
         /// <param name="modulationFreq">输出的调制频率数组，对应时间轴的每个点（赫兹）。</param>
         /// <returns>
@@ -609,7 +610,7 @@ namespace NvhLibCSharp
         /// 本方法在非托管内存中为频率轴分配缓冲区并在完成后释放；输出的 <paramref name="modulationDepth"/> 与 <paramref name="modulationFreq"/> 长度等于时间箱数（timeBins）。
         /// </remarks>
         /// <exception cref="InvalidOperationException">当本机库返回错误码时抛出，消息来自 <see cref="GetLastErrorMessage(int)"/>。</exception>
-        public static double[,] ModulationSpectrumAnalysis(Signal signal, double frequencyResolution, ScaleOptions scaleOpt, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
+        public static double[,] ModulationSpectrumAnalysis(Signal signal, double frequencyResolution, double cutoffFreq, ScaleOptions scaleOpt, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
         {
             // 0. 分配指针变量
             IntPtr spectrogramPtr = IntPtr.Zero;
@@ -621,7 +622,7 @@ namespace NvhLibCSharp
             int timeBins = 0;
 
             // 1. 调用本机方法
-            int errCode = NvhInterop.ModulationSpectrumAnalyze(signal, frequencyResolution, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref spectrogramPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
+            int errCode = NvhInterop.ModulationSpectrumAnalyze(signal, frequencyResolution, cutoffFreq, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref spectrogramPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
             Assert(errCode);
 
             // 2. 复制数据到托管内存并释放本机内存
@@ -665,6 +666,7 @@ namespace NvhLibCSharp
         /// <b>注意：此方法不是线程安全的。</b>
         /// </remarks>
         /// <param name="signal">待分析的输入信号。必须不为 null。</param>
+        /// <param name="cutoffFreq">调制频率的截止频率（以赫兹为单位）。必须为正数。</param>
         /// <param name="scaleOpt">缩放选项，指定分析时使用的频率刻度和参考值。</param>
         /// <param name="windowSize">分析窗口的大小（以采样点为单位）。必须为正整数。</param>
         /// <param name="hopSize">连续窗口之间的滑动步长（以采样点为单位）。必须为正整数。</param>
@@ -673,8 +675,7 @@ namespace NvhLibCSharp
         /// <param name="modulationDepth">当此方法返回时，包含代表每一时间帧调制深度的数组。</param>
         /// <param name="modulationFreq">当此方法返回时，包含代表每一时间帧调制频率的数组。</param>
         /// <returns>包含调制谱的二维数组，其中每个元素代表特定频率和时间仓处的谱能量。</returns>
-        /// TODO: 0~200Hz
-        public static double[,] ModulationSpectrumAnalysis(Signal signal, ScaleOptions scaleOpt, int windowSize, int hopSize, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
+        public static double[,] ModulationSpectrumAnalysis(Signal signal, int windowSize, int hopSize, double cutoffFreq, ScaleOptions scaleOpt, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
         {
             IntPtr spectrogramPtr = IntPtr.Zero;
             IntPtr freqAxisPtr = IntPtr.Zero;
@@ -684,7 +685,7 @@ namespace NvhLibCSharp
             int freqBins = 0;
             int timeBins = 0;
 
-            int errCode = NvhInterop.ModulationSpectrumAnalyzeStft(signal, windowSize, hopSize, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref spectrogramPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
+            int errCode = NvhInterop.ModulationSpectrumAnalyzeStft(signal, windowSize, hopSize, cutoffFreq, (int)scaleOpt.Scale, scaleOpt.ReferenceValue, ref spectrogramPtr, ref freqAxisPtr, ref timeAxisPtr, ref modulationDepthPtr, ref modulationFreqPtr, ref freqBins, ref timeBins);
             Assert(errCode);
 
             double[,] spectrogram = new double[freqBins, timeBins];
@@ -819,7 +820,6 @@ namespace NvhLibCSharp
         /// <returns>
         /// 返回计算得到的稳态锐度值（单位：acum）。如果无法执行分析则返回 NaN。
         /// </returns>
-        /// TODO: 提供频率轴（Bark轴）曲线
         public static double StationarySharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[] specSharpness, out double[] barkAxis)
         {
             double sharpness = double.NaN;
@@ -960,14 +960,15 @@ namespace NvhLibCSharp
         /// <remarks>输出数组由该方法分配并填充。返回数组的长度和维度取决于输入信号和所选的分析方法。此方法是线程安全的。</remarks>
         /// <param name="signal">要进行波动强度分析的输入信号。</param>
         /// <param name="method">应用于信号的波动分析方法。</param>
+        /// <param name="fluctuationTimeDep">当此方法返回时，包含一个数组，表示信号在各时间帧的波动强度。</param>
         /// <param name="fluctuationSpec">当此方法返回时，包含一个二维数组，表示跨频带和时间帧的波动强度频谱。</param>
         /// <param name="fluctuationSpecAvg">当此方法返回时，包含一个数组，表示每个频带的平均波动强度。</param>
         /// <param name="bandAxis">当此方法返回时，包含一个频带值数组，对应于波动频谱的频率轴。</param>
         /// <param name="timeAxis">当此方法返回时，包含一个时间值数组，对应于波动频谱的时间帧。</param>
-        /// <returns>一个 double 数组，表示输入信号随时间变化的波动强度。</returns>
-        /// TODO: 提供总体波动强度值
-        public static double[] FluctuationStrengthAnalyze(Signal signal, FluctuationMethod method, out double[,] fluctuationSpec, out double[] fluctuationSpecAvg, out double[] bandAxis, out double[] timeAxis)
+        /// <returns>一个 double 数值，表示总体波动度</returns>
+        public static double FluctuationStrengthAnalyze(Signal signal, FluctuationMethod method, out double[] fluctuationTimeDep, out double[,] fluctuationSpec, out double[] fluctuationSpecAvg, out double[] bandAxis, out double[] timeAxis)
         {
+            double totalFluctuation = double.NaN;
             IntPtr fluctuationTimeDepPtr = IntPtr.Zero;
             IntPtr fluctuationSpecPtr = IntPtr.Zero;
             IntPtr fluctuationSpecAvgPtr = IntPtr.Zero;
@@ -976,10 +977,11 @@ namespace NvhLibCSharp
             IntPtr timeAxisPtr = IntPtr.Zero;
             int timeBins = int.MinValue;
 
-            NvhInterop.FluctuationStrengthAnalyze(signal, (int)method, ref fluctuationTimeDepPtr, ref fluctuationSpecPtr, ref fluctuationSpecAvgPtr, ref bandAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
+            NvhInterop.FluctuationStrengthAnalyze(signal, (int)method, ref totalFluctuation, ref fluctuationTimeDepPtr, ref fluctuationSpecPtr, ref fluctuationSpecAvgPtr, ref bandAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
 
-            double[] fluctuationTimeDep = new double[timeBins];
+            fluctuationTimeDep = new double[timeBins];
             Marshal.Copy(fluctuationTimeDepPtr, fluctuationTimeDep, 0, timeBins);
+            Marshal.FreeCoTaskMem(fluctuationTimeDepPtr);
 
             double[] flatFluctuationSpec = new double[bandBins * timeBins];
             Marshal.Copy(fluctuationSpecPtr, flatFluctuationSpec, 0, bandBins * timeBins);
@@ -991,23 +993,21 @@ namespace NvhLibCSharp
                     fluctuationSpec[i, j] = flatFluctuationSpec[j * bandBins + i];
                 }
             }
+            Marshal.FreeCoTaskMem(fluctuationSpecPtr);
 
             fluctuationSpecAvg = new double[bandBins];
             Marshal.Copy(fluctuationSpecAvgPtr, fluctuationSpecAvg, 0, bandBins);
+            Marshal.FreeCoTaskMem(fluctuationSpecAvgPtr);
 
             bandAxis = new double[bandBins];
             Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
+            Marshal.FreeCoTaskMem(bandAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-
-            Marshal.FreeCoTaskMem(fluctuationTimeDepPtr);
-            Marshal.FreeCoTaskMem(fluctuationSpecPtr);
-            Marshal.FreeCoTaskMem(fluctuationSpecAvgPtr);
-            Marshal.FreeCoTaskMem(bandAxisPtr);
             Marshal.FreeCoTaskMem(timeAxisPtr);
 
-            return fluctuationTimeDep;
+            return totalFluctuation;
         }
 
         /// <summary>
