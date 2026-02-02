@@ -673,6 +673,7 @@ namespace NvhLibCSharp
         /// <param name="modulationDepth">当此方法返回时，包含代表每一时间帧调制深度的数组。</param>
         /// <param name="modulationFreq">当此方法返回时，包含代表每一时间帧调制频率的数组。</param>
         /// <returns>包含调制谱的二维数组，其中每个元素代表特定频率和时间仓处的谱能量。</returns>
+        /// TODO: 0~200Hz
         public static double[,] ModulationSpectrumAnalysis(Signal signal, ScaleOptions scaleOpt, int windowSize, int hopSize, out double[] freqAxis, out double[] timeAxis, out double[] modulationDepth, out double[] modulationFreq)
         {
             IntPtr spectrogramPtr = IntPtr.Zero;
@@ -818,11 +819,24 @@ namespace NvhLibCSharp
         /// <returns>
         /// 返回计算得到的稳态锐度值（单位：acum）。如果无法执行分析则返回 NaN。
         /// </returns>
-        public static double StationarySharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec)
+        /// TODO: 提供频率轴（Bark轴）曲线
+        public static double StationarySharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[] specSharpness, out double[] barkAxis)
         {
             double sharpness = double.NaN;
+            IntPtr specSharpnessPtr = IntPtr.Zero;
+            IntPtr barkAxisPtr = IntPtr.Zero;
+            int barkBins = int.MinValue;
 
-            NvhInterop.StationarySharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpness);
+            NvhInterop.StationarySharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpness, ref specSharpnessPtr, ref barkAxisPtr, ref barkBins);
+
+            specSharpness = new double[barkBins];
+            Marshal.Copy(specSharpnessPtr, specSharpness, 0, barkBins);
+            Marshal.FreeCoTaskMem(specSharpnessPtr);
+
+            barkAxis = new double[barkBins];
+            Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
+            Marshal.FreeCoTaskMem(barkAxisPtr);
+
             return sharpness;
         }
 
@@ -838,17 +852,39 @@ namespace NvhLibCSharp
         /// <param name="skipInSec">分析开始前在信号起始处跳过的时长（秒），必须大于或等于 0。</param>
         /// <param name="timeAxis">方法返回时包含与每个锐度测量值对应的时间数组（秒）。</param>
         /// <returns>表示信号每个时间点锐度的 double 数组。</returns>
-        public static double[] TimeVaryingSharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[] timeAxis)
+        public static double[] TimeVaryingSharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[,] specSharpness, out double[] barkAxis, out double[] timeAxis)
         {
             IntPtr sharpnessPtr = IntPtr.Zero;
+            IntPtr specSharpnessPtr = IntPtr.Zero;
+            IntPtr barkAxisPtr = IntPtr.Zero;
             IntPtr timeAxisPtr = IntPtr.Zero;
+            int barkBins = int.MinValue;
             int timeBins = int.MinValue;
-            NvhInterop.TimeVaryingSharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpnessPtr, ref timeAxisPtr, ref timeBins);
+
+            NvhInterop.TimeVaryingSharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpnessPtr, ref specSharpnessPtr, ref barkAxisPtr, ref timeAxisPtr, ref barkBins, ref timeBins);
+
             double[] sharpness = new double[timeBins];
-            timeAxis = new double[timeBins];
             Marshal.Copy(sharpnessPtr, sharpness, 0, timeBins);
-            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
             Marshal.FreeCoTaskMem(sharpnessPtr);
+
+            specSharpness = new double[barkBins, timeBins];
+            int totalElement = barkBins * timeBins;
+            unsafe
+            {
+                fixed (double* pDest = specSharpness)
+                {
+                    long bytesToCopy = (long)totalElement * sizeof(double);
+                    Buffer.MemoryCopy((void*)specSharpnessPtr, pDest, bytesToCopy, bytesToCopy);
+                }
+            }
+            Marshal.FreeCoTaskMem(specSharpnessPtr);
+
+            barkAxis = new double[barkBins];
+            Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
+            Marshal.FreeCoTaskMem(barkAxisPtr);
+
+            timeAxis = new double[timeBins];
+            Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
             Marshal.FreeCoTaskMem(timeAxisPtr);
             return sharpness;
         }
@@ -917,7 +953,7 @@ namespace NvhLibCSharp
 
             return roughness;
         }
-        
+
         /// <summary>
         /// 使用指定的方法分析指定信号的波动强度，并返回随时间变化的波动强度值。
         /// </summary>
@@ -929,6 +965,7 @@ namespace NvhLibCSharp
         /// <param name="bandAxis">当此方法返回时，包含一个频带值数组，对应于波动频谱的频率轴。</param>
         /// <param name="timeAxis">当此方法返回时，包含一个时间值数组，对应于波动频谱的时间帧。</param>
         /// <returns>一个 double 数组，表示输入信号随时间变化的波动强度。</returns>
+        /// TODO: 提供总体波动强度值
         public static double[] FluctuationStrengthAnalyze(Signal signal, FluctuationMethod method, out double[,] fluctuationSpec, out double[] fluctuationSpecAvg, out double[] bandAxis, out double[] timeAxis)
         {
             IntPtr fluctuationTimeDepPtr = IntPtr.Zero;

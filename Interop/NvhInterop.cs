@@ -63,10 +63,10 @@ namespace NvhLibCSharp.Interop
         public static partial int TimeVaryingLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref IntPtr outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref IntPtr outTimeAxis, ref int barkBins, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "StationarySharpnessAnalyze")]
-        public static partial int StationarySharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref double outSharpness);
+        public static partial int StationarySharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref double outSharpness, ref IntPtr outSpecSharpness, ref IntPtr outBarkAxis, ref int outBarkBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "TimeVaryingSharpnessAnalyze")]
-        public static partial int TimeVaryingSharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref IntPtr outSharpness, ref IntPtr outTimeAxis, ref int timeBins);
+        public static partial int TimeVaryingSharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref IntPtr outSharpness, ref IntPtr outSpecSharpness, ref IntPtr outBarkAxis, ref IntPtr outTimeAxis, ref int barkBins, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "RoughnessAnalyze")]
         public static partial int RoughnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outRoughness, ref IntPtr outRoughnessTimeDep, ref IntPtr outRoughnessSpec, ref IntPtr outRoughnessSpecAvg, ref IntPtr bandAxis, ref IntPtr barkAxis, ref int bandBins, ref IntPtr timeAxis, ref int timeBins);

@@ -15,7 +15,7 @@
 // #define STATIONARY_SHARPNESS
 // #define TIME_VARYING_SHARPNESS
 // #define ROUGHNESS
-#define OCTAVE
+// #define OCTAVE
 
 using NvhLibCSharp.Interop;
 using NvhLibCSharp.Options;
@@ -27,7 +27,7 @@ namespace NvhLibCSharp
     {
         static void Main(string[] args)
         {
-            Nvh.LoadLicense("D:\\测试\\LIC-20260105-20bbbf6e.lic");
+            Nvh.LoadLicense("LIC-20260105-20bbbf6e.lic");
 #if OVERALL
             {
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
@@ -265,7 +265,7 @@ namespace NvhLibCSharp
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
                 var signal = new Signal(sample, 1.0 / 51200);
 
-                var sharpness = Nvh.StationarySharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0);
+                var sharpness = Nvh.StationarySharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0, out var specSharpness, out var barkAxis);
                 Console.WriteLine($"Sharpness: {sharpness:F6} acum");
             }
 #endif
@@ -274,7 +274,7 @@ namespace NvhLibCSharp
             {
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
                 var signal = new Signal(sample, 1.0 / 51200);
-                var sharpness = Nvh.TimeVaryingSharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0, out var times);
+                var sharpness = Nvh.TimeVaryingSharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0, out var specSharpness, out var barks, out var times);
                 for (int i = 0; i < times.Length; i++)
                 {
                     Console.WriteLine($"{times[i]:F6}\t{sharpness[i]:F6}");
