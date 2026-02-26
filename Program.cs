@@ -8,14 +8,14 @@
 // #define HILBERT_EX
 // #define MORLET_WAVELET
 // #define MORLET_WAVELET_LMS
-#define MODULATION
-#define MODULATION_STFT
+// #define MODULATION
+// #define MODULATION_STFT
 // #define STATIONARY_LOUDNESS
 // #define TIME_VARYING_LOUDNESS
 // #define STATIONARY_SHARPNESS
 // #define TIME_VARYING_SHARPNESS
 // #define ROUGHNESS
-// #define OCTAVE
+#define OCTAVE
 
 using NvhLibCSharp.Interop;
 using NvhLibCSharp.Options;
@@ -33,7 +33,7 @@ namespace NvhLibCSharp
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
                 var signal = new Signal(sample, 1.0 / 51200);
 
-                var oaData = Nvh.OverallLevelSpectral(signal, 4096, 0.15, 2e-5, Window.Hanning, Weight.A, Scale.Linear, out var oaTimeAxis);
+                var oaData = Nvh.OverallLevelSpectral(signal, 4096, 0.2, 2e-5, Window.Hanning, Weight.A, Scale.Linear, out var oaTimeAxis);
 
                 for (int i = 0; i < oaTimeAxis.Length; i++)
                 {
@@ -333,7 +333,7 @@ namespace NvhLibCSharp
                 var stepOpt = new SpectraStepOptions(Enums.SpectraStepType.Overlap, 0.5);
                 var scaleOpt = new ScaleOptions(Scale.Linear, 1);
                 var spectra = Nvh.AveragedSpectrum(signal, spectraOpt, stepOpt, scaleOpt, Format.Rms, Average.Energy, Window.Hanning, Weight.Linear);
-                var deltaF = 51200 / 2 / 4096;
+                var deltaF = 25600 / 2 / 4096;
 
                 var bandLevels = Nvh.Octave(spectra, deltaF, Window.Hanning, Enums.Octave.ThirdOctave, new ScaleOptions(Scale.Db, 1.0), out var bandCenter, out _, out _);
 
