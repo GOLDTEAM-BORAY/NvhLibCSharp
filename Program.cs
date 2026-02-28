@@ -15,7 +15,7 @@
 // #define STATIONARY_SHARPNESS
 // #define TIME_VARYING_SHARPNESS
 // #define ROUGHNESS
-#define OCTAVE
+// #define OCTAVE
 
 using NvhLibCSharp.Interop;
 using NvhLibCSharp.Options;

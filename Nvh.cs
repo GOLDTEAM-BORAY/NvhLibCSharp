@@ -732,24 +732,28 @@ namespace NvhLibCSharp
         /// <returns>
         /// 返回一个元组，包含整体响度值以及每个 Bark 频带的特定响度数组。数组长度对应分析得到的 Bark 频带数量。
         /// </returns>
-        public static (double Loudness, double[] SpecLoudness) StationaryLoudnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] barkAxis)
+        public static (double Loudness, double[] SpecLoudness) StationaryLoudnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] barkAxis, out double[] freqAxis)
         {
             double loudness = double.NaN;
             IntPtr specLoudnessPtr = IntPtr.Zero;
             IntPtr barkAxisPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
             int barkBins = int.MinValue;
 
-            int errCode = NvhInterop.StationaryLoudnessAnalyze(signal, (int)soundField, skipInSec, ref loudness, ref specLoudnessPtr, ref barkAxisPtr, ref barkBins);
+            int errCode = NvhInterop.StationaryLoudnessAnalyze(signal, (int)soundField, skipInSec, ref loudness, ref specLoudnessPtr, ref barkAxisPtr, ref freqAxisPtr, ref barkBins);
             Assert(errCode);
 
             double[] specLoudness = new double[barkBins];
             barkAxis = new double[barkBins];
+            freqAxis = new double[barkBins];
 
             Marshal.Copy(specLoudnessPtr, specLoudness, 0, barkBins);
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
 
             Marshal.FreeCoTaskMem(specLoudnessPtr);
             Marshal.FreeCoTaskMem(barkAxisPtr);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
             return (loudness, specLoudness);
         }
 
@@ -768,16 +772,17 @@ namespace NvhLibCSharp
         /// <returns>
         /// 返回一个元组：第一个数组为每个时间帧的整体响度，第二个数组为按行主序展平的特定响度（时间帧 × Bark 频带）。
         /// </returns>
-        public static (double[] Loudness, double[,] SpecLoudness) TimeVaryingLoudnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] barkAxis, out double[] timeAxis)
+        public static (double[] Loudness, double[,] SpecLoudness) TimeVaryingLoudnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] barkAxis, out double[] freqAxis, out double[] timeAxis)
         {
             IntPtr loudnessPtr = IntPtr.Zero;
             IntPtr specLoudnessPtr = IntPtr.Zero;
             IntPtr barkAxisPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
             IntPtr timeAxisPtr = IntPtr.Zero;
             int timeBins = int.MinValue;
             int barkBins = int.MinValue;
 
-            var errCode = NvhInterop.TimeVaryingLoudnessAnalyze(signal, (int)soundField, skipInSec, ref loudnessPtr, ref specLoudnessPtr, ref barkAxisPtr, ref timeAxisPtr, ref barkBins, ref timeBins);
+            var errCode = NvhInterop.TimeVaryingLoudnessAnalyze(signal, (int)soundField, skipInSec, ref loudnessPtr, ref specLoudnessPtr, ref barkAxisPtr, ref freqAxisPtr, ref timeAxisPtr, ref barkBins, ref timeBins);
             Assert(errCode);
 
             double[] loudness = new double[timeBins];
@@ -785,15 +790,18 @@ namespace NvhLibCSharp
             double[,] specLoudness = new double[barkBins, timeBins];
 
             barkAxis = new double[barkBins];
+            freqAxis = new double[barkBins];
             timeAxis = new double[timeBins];
 
             Marshal.Copy(loudnessPtr, loudness, 0, timeBins);
             Marshal.Copy(specLoudnessPtr, flatSpacLoudness, 0, timeBins * barkBins);
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
             Marshal.FreeCoTaskMem(loudnessPtr);
             Marshal.FreeCoTaskMem(specLoudnessPtr);
             Marshal.FreeCoTaskMem(barkAxisPtr);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
             Marshal.FreeCoTaskMem(timeAxisPtr);
 
             for (int i = 0; i < barkBins; i++)
@@ -820,14 +828,15 @@ namespace NvhLibCSharp
         /// <returns>
         /// 返回计算得到的稳态锐度值（单位：acum）。如果无法执行分析则返回 NaN。
         /// </returns>
-        public static double StationarySharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[] specSharpness, out double[] barkAxis)
+        public static double StationarySharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[] specSharpness, out double[] barkAxis, out double[] freqAxis)
         {
             double sharpness = double.NaN;
             IntPtr specSharpnessPtr = IntPtr.Zero;
             IntPtr barkAxisPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
             int barkBins = int.MinValue;
 
-            NvhInterop.StationarySharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpness, ref specSharpnessPtr, ref barkAxisPtr, ref barkBins);
+            NvhInterop.StationarySharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpness, ref specSharpnessPtr, ref barkAxisPtr, ref freqAxisPtr, ref barkBins);
 
             specSharpness = new double[barkBins];
             Marshal.Copy(specSharpnessPtr, specSharpness, 0, barkBins);
@@ -836,6 +845,10 @@ namespace NvhLibCSharp
             barkAxis = new double[barkBins];
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
             Marshal.FreeCoTaskMem(barkAxisPtr);
+
+            freqAxis = new double[barkBins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
 
             return sharpness;
         }
@@ -852,16 +865,17 @@ namespace NvhLibCSharp
         /// <param name="skipInSec">分析开始前在信号起始处跳过的时长（秒），必须大于或等于 0。</param>
         /// <param name="timeAxis">方法返回时包含与每个锐度测量值对应的时间数组（秒）。</param>
         /// <returns>表示信号每个时间点锐度的 double 数组。</returns>
-        public static double[] TimeVaryingSharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[,] specSharpness, out double[] barkAxis, out double[] timeAxis)
+        public static double[] TimeVaryingSharpnessAnalyze(Signal signal, SharpnessWeighting sharpnessWeighting, SoundField soundField, double skipInSec, out double[,] specSharpness, out double[] barkAxis, out double[] freqAxis, out double[] timeAxis)
         {
             IntPtr sharpnessPtr = IntPtr.Zero;
             IntPtr specSharpnessPtr = IntPtr.Zero;
             IntPtr barkAxisPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
             IntPtr timeAxisPtr = IntPtr.Zero;
             int barkBins = int.MinValue;
             int timeBins = int.MinValue;
 
-            NvhInterop.TimeVaryingSharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpnessPtr, ref specSharpnessPtr, ref barkAxisPtr, ref timeAxisPtr, ref barkBins, ref timeBins);
+            NvhInterop.TimeVaryingSharpnessAnalyze(signal, (int)sharpnessWeighting, (int)soundField, skipInSec, ref sharpnessPtr, ref specSharpnessPtr, ref barkAxisPtr, ref freqAxisPtr, ref timeAxisPtr, ref barkBins, ref timeBins);
 
             double[] sharpness = new double[timeBins];
             Marshal.Copy(sharpnessPtr, sharpness, 0, timeBins);
@@ -882,6 +896,10 @@ namespace NvhLibCSharp
             barkAxis = new double[barkBins];
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
             Marshal.FreeCoTaskMem(barkAxisPtr);
+
+            freqAxis = new double[barkBins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
@@ -905,7 +923,7 @@ namespace NvhLibCSharp
         /// <param name="bandAxis">方法返回时，包含对应于频谱分析的频带中心值数组。</param>
         /// <param name="timeAxis">方法返回时，包含分析中对应每个时间帧的时间值数组（秒）。</param>
         /// <returns>输入信号的整体粗糙度值，基于所有时间帧和频带计算得出。</returns>
-        public static double RoughnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] roughnessTimeDep, out double[,] roughnessSpec, out double[] roughnessSpecAvg, out double[] bandAxis, out double[] barkAxis, out double[] timeAxis)
+        public static double RoughnessAnalyze(Signal signal, SoundField soundField, double skipInSec, out double[] roughnessTimeDep, out double[,] roughnessSpec, out double[] roughnessSpecAvg, out double[] bandAxis, out double[] barkAxis, out double[] freqAxis, out double[] timeAxis)
         {
             double roughness = double.NaN;
             IntPtr roughnessTimeDepPtr = IntPtr.Zero;
@@ -913,11 +931,12 @@ namespace NvhLibCSharp
             IntPtr roughnessSpecAvgPtr = IntPtr.Zero;
             IntPtr bandAxisPtr = IntPtr.Zero;
             IntPtr barkAxisPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
             IntPtr timeAxisPtr = IntPtr.Zero;
             int bandBins = int.MinValue;
             int timeBins = int.MinValue;
 
-            NvhInterop.RoughnessAnalyze(signal, (int)soundField, skipInSec, ref roughness, ref roughnessTimeDepPtr, ref roughnessSpecPtr, ref roughnessSpecAvgPtr, ref bandAxisPtr, ref barkAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
+            NvhInterop.RoughnessAnalyze(signal, (int)soundField, skipInSec, ref roughness, ref roughnessTimeDepPtr, ref roughnessSpecPtr, ref roughnessSpecAvgPtr, ref bandAxisPtr, ref barkAxisPtr, ref freqAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
 
             roughnessTimeDep = new double[timeBins];
             Marshal.Copy(roughnessTimeDepPtr, roughnessTimeDep, 0, timeBins);
@@ -947,6 +966,10 @@ namespace NvhLibCSharp
             Marshal.Copy(barkAxisPtr, barkAxis, 0, bandBins);
             Marshal.FreeCoTaskMem(barkAxisPtr);
 
+            freqAxis = new double[bandBins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, bandBins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
+
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
             Marshal.FreeCoTaskMem(timeAxisPtr);
@@ -966,18 +989,19 @@ namespace NvhLibCSharp
         /// <param name="bandAxis">当此方法返回时，包含一个频带值数组，对应于波动频谱的频率轴。</param>
         /// <param name="timeAxis">当此方法返回时，包含一个时间值数组，对应于波动频谱的时间帧。</param>
         /// <returns>一个 double 数值，表示总体波动度</returns>
-        public static double FluctuationStrengthAnalyze(Signal signal, FluctuationMethod method, out double[] fluctuationTimeDep, out double[,] fluctuationSpec, out double[] fluctuationSpecAvg, out double[] bandAxis, out double[] timeAxis)
+        public static double FluctuationStrengthAnalyze(Signal signal, FluctuationMethod method, out double[] fluctuationTimeDep, out double[,] fluctuationSpec, out double[] fluctuationSpecAvg, out double[] bandAxis, out double[] freqAxis, out double[] timeAxis)
         {
             double totalFluctuation = double.NaN;
             IntPtr fluctuationTimeDepPtr = IntPtr.Zero;
             IntPtr fluctuationSpecPtr = IntPtr.Zero;
             IntPtr fluctuationSpecAvgPtr = IntPtr.Zero;
             IntPtr bandAxisPtr = IntPtr.Zero;
+            IntPtr freqAxisPtr = IntPtr.Zero;
             int bandBins = int.MinValue;
             IntPtr timeAxisPtr = IntPtr.Zero;
             int timeBins = int.MinValue;
 
-            NvhInterop.FluctuationStrengthAnalyze(signal, (int)method, ref totalFluctuation, ref fluctuationTimeDepPtr, ref fluctuationSpecPtr, ref fluctuationSpecAvgPtr, ref bandAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
+            NvhInterop.FluctuationStrengthAnalyze(signal, (int)method, ref totalFluctuation, ref fluctuationTimeDepPtr, ref fluctuationSpecPtr, ref fluctuationSpecAvgPtr, ref bandAxisPtr, ref freqAxisPtr, ref bandBins, ref timeAxisPtr, ref timeBins);
 
             fluctuationTimeDep = new double[timeBins];
             Marshal.Copy(fluctuationTimeDepPtr, fluctuationTimeDep, 0, timeBins);
@@ -1002,6 +1026,10 @@ namespace NvhLibCSharp
             bandAxis = new double[bandBins];
             Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
             Marshal.FreeCoTaskMem(bandAxisPtr);
+
+            freqAxis = new double[bandBins];
+            Marshal.Copy(freqAxisPtr, freqAxis, 0, bandBins);
+            Marshal.FreeCoTaskMem(freqAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);

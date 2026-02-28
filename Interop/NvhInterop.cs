@@ -60,21 +60,21 @@ namespace NvhLibCSharp.Interop
         public static partial int ModulationSpectrumAnalyzeStft(Signal signal, int windowSize, int hopSize, double cutoffFreq, int scaleType, double referenceValue, ref IntPtr spectrogram, ref IntPtr freqAxis, ref IntPtr timeAxis, ref IntPtr modulationDepth, ref IntPtr modulationFreq, ref int freqBins, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "StationaryLoudnessAnalyze")]
-        public static partial int StationaryLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref int barkBins);
+        public static partial int StationaryLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref IntPtr outFreqAxis, ref int barkBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "TimeVaryingLoudnessAnalyze")]
-        public static partial int TimeVaryingLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref IntPtr outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref IntPtr outTimeAxis, ref int barkBins, ref int timeBins);
+        public static partial int TimeVaryingLoudnessAnalyze(Signal signal, int soundField, double skipInSec, ref IntPtr outLoudness, ref IntPtr outSpecLoudness, ref IntPtr outBarkAxis, ref IntPtr outFreqAxis, ref IntPtr outTimeAxis, ref int barkBins, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "StationarySharpnessAnalyze")]
-        public static partial int StationarySharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref double outSharpness, ref IntPtr outSpecSharpness, ref IntPtr outBarkAxis, ref int outBarkBins);
+        public static partial int StationarySharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref double outSharpness, ref IntPtr outSpecSharpness, ref IntPtr outBarkAxis, ref IntPtr outFreqAxis, ref int outBarkBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "TimeVaryingSharpnessAnalyze")]
-        public static partial int TimeVaryingSharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref IntPtr outSharpness, ref IntPtr outSpecSharpness, ref IntPtr outBarkAxis, ref IntPtr outTimeAxis, ref int barkBins, ref int timeBins);
+        public static partial int TimeVaryingSharpnessAnalyze(Signal signal, int sharpnessWeighting, int soundField, double skipInSec, ref IntPtr outSharpness, ref IntPtr outSpecSharpness, ref IntPtr outBarkAxis, ref IntPtr outFreqAxis, ref IntPtr outTimeAxis, ref int barkBins, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "RoughnessAnalyze")]
-        public static partial int RoughnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outRoughness, ref IntPtr outRoughnessTimeDep, ref IntPtr outRoughnessSpec, ref IntPtr outRoughnessSpecAvg, ref IntPtr bandAxis, ref IntPtr barkAxis, ref int bandBins, ref IntPtr timeAxis, ref int timeBins);
+        public static partial int RoughnessAnalyze(Signal signal, int soundField, double skipInSec, ref double outRoughness, ref IntPtr outRoughnessTimeDep, ref IntPtr outRoughnessSpec, ref IntPtr outRoughnessSpecAvg, ref IntPtr bandAxis, ref IntPtr barkAxis, ref IntPtr freqAxis, ref int bandBins, ref IntPtr timeAxis, ref int timeBins);
 
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "FluctuationStrengthAnalyze")]
-        public static partial int FluctuationStrengthAnalyze(Signal signal, int fluctuationMethod, ref double outTotalFluctuation, ref IntPtr outFluctuationTimeDep, ref IntPtr outFluctuationSpec, ref IntPtr outFluctuationSpecAvg, ref IntPtr barkAxis, ref int barkBins, ref IntPtr timeAxis, ref int timeBins);
+        public static partial int FluctuationStrengthAnalyze(Signal signal, int fluctuationMethod, ref double outTotalFluctuation, ref IntPtr outFluctuationTimeDep, ref IntPtr outFluctuationSpec, ref IntPtr outFluctuationSpecAvg, ref IntPtr barkAxis, ref IntPtr freqAxis, ref int barkBins, ref IntPtr timeAxis, ref int timeBins);
     }
 }
