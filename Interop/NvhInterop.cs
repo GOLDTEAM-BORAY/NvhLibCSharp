@@ -11,6 +11,9 @@ namespace NvhLibCSharp.Interop
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "GetLastErrorMessage", StringMarshalling = StringMarshalling.Custom, StringMarshallingCustomType = typeof(AnsiStringMarshaller))]
         public static partial string GetLastErrorMessage(int errorCode);
 
+        [LibraryImport("BrcSignalKit.dll", EntryPoint = "Free")]
+        public static partial int Free(IntPtr ptr);
+
         [LibraryImport("BrcSignalKit.dll", EntryPoint = "OverallLevelSpectral")]
         public static partial int OverallLevelSpectral(Signal signal, int spectrumLines, double increment, double referenceValue, int windowType, int weightType, int scaleType, ref IntPtr data, ref int bins);
 

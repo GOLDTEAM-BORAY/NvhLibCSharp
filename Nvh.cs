@@ -51,7 +51,7 @@ namespace NvhLibCSharp
 
             double[] data = new double[bins];
             Marshal.Copy(dataPtr, data, 0, bins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
 
             timeAxis = new double[bins];
             for (int i = 0; i < bins; i++)
@@ -89,22 +89,23 @@ namespace NvhLibCSharp
             var spectraPtr = amplitudeSpectra.ToIntPtr(out var spectraLength);
             int errCode = NvhInterop.Octave(spectraPtr, spectraLength, frequencyStep, (int)window, (int)octave, (int)scale.Scale, scale.ReferenceValue, ref bandLevelsPtr, ref bandCentersPtr, ref bandLowersPtr, ref bandUppersPtr, ref bandCount);
             Assert(errCode);
+            Marshal.FreeHGlobal(spectraPtr);
 
             double[] bandLevels = new double[bandCount];
             Marshal.Copy(bandLevelsPtr, bandLevels, 0, bandCount);
-            Marshal.FreeCoTaskMem(bandLevelsPtr);
+            FreeNative(bandLevelsPtr);
 
             bandCenters = new double[bandCount];
             Marshal.Copy(bandCentersPtr, bandCenters, 0, bandCount);
-            Marshal.FreeCoTaskMem(bandCentersPtr);
+            FreeNative(bandCentersPtr);
 
             bandLowers = new double[bandCount];
             Marshal.Copy(bandLowersPtr, bandLowers, 0, bandCount);
-            Marshal.FreeCoTaskMem(bandLowersPtr);
+            FreeNative(bandLowersPtr);
 
             bandUppers = new double[bandCount];
             Marshal.Copy(bandUppersPtr, bandUppers, 0, bandCount);
-            Marshal.FreeCoTaskMem(bandUppersPtr);
+            FreeNative(bandUppersPtr);
 
             return bandLevels;
         }
@@ -139,11 +140,11 @@ namespace NvhLibCSharp
 
             double[] data = new double[bins];
             Marshal.Copy(dataPtr, data, 0, bins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
 
             rpmAxis = new double[bins];
             Marshal.Copy(rpmAxisPtr, rpmAxis, 0, bins);
-            Marshal.FreeCoTaskMem(rpmAxisPtr);
+            FreeNative(rpmAxisPtr);
 
             return data;
         }
@@ -188,7 +189,7 @@ namespace NvhLibCSharp
 
             double[] data = new double[bins];
             Marshal.Copy(dataPtr, data, 0, bins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
 
             if (scaleOpt.Scale == Scale.Db)
             {
@@ -234,7 +235,7 @@ namespace NvhLibCSharp
             double[,] data = new double[timeBins, frequencyBins];
             double[] flatData = new double[timeBins * frequencyBins];
             Marshal.Copy(dataPtr, flatData, 0, timeBins * frequencyBins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
             for (int i = 0; i < timeBins; i++)
             {
                 for (int j = 0; j < frequencyBins; j++)
@@ -287,7 +288,7 @@ namespace NvhLibCSharp
             double[,] data = new double[rpmBins, frequencyBins];
             double[] flatData = new double[rpmBins * frequencyBins];
             Marshal.Copy(dataPtr, flatData, 0, rpmBins * frequencyBins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
             for (int i = 0; i < rpmBins; i++)
             {
                 for (int j = 0; j < frequencyBins; j++)
@@ -297,10 +298,10 @@ namespace NvhLibCSharp
             }
             rpmAxis = new double[rpmBins];
             Marshal.Copy(rpmAxisPtr, rpmAxis, 0, rpmBins);
-            Marshal.FreeCoTaskMem(rpmAxisPtr);
+            FreeNative(rpmAxisPtr);
             frequencyAxis = new double[frequencyBins];
             Marshal.Copy(frequencyAxisPtr, frequencyAxis, 0, frequencyBins);
-            Marshal.FreeCoTaskMem(frequencyAxisPtr);
+            FreeNative(frequencyAxisPtr);
             return data;
         }
 
@@ -335,7 +336,7 @@ namespace NvhLibCSharp
             double[,] data = new double[rpmBins, orderBins];
             double[] flatData = new double[rpmBins * orderBins];
             Marshal.Copy(dataPtr, flatData, 0, rpmBins * orderBins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
             for (int i = 0; i < rpmBins; i++)
             {
                 for (int j = 0; j < orderBins; j++)
@@ -345,10 +346,10 @@ namespace NvhLibCSharp
             }
             rpmAxis = new double[rpmBins];
             Marshal.Copy(rpmAxisPtr, rpmAxis, 0, rpmBins);
-            Marshal.FreeCoTaskMem(rpmAxisPtr);
+            FreeNative(rpmAxisPtr);
             orderAxis = new double[orderBins];
             Marshal.Copy(orderAxisPtr, orderAxis, 0, orderBins);
-            Marshal.FreeCoTaskMem(orderAxisPtr);
+            FreeNative(orderAxisPtr);
             return data;
         }
 
@@ -366,7 +367,7 @@ namespace NvhLibCSharp
             Assert(errCode);
             double[] data = new double[bins];
             Marshal.Copy(dataPtr, data, 0, bins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
             return data;
         }
 
@@ -388,7 +389,7 @@ namespace NvhLibCSharp
 
                 double[] data = new double[bins];
                 Marshal.Copy(dataPtr, data, 0, bins);
-                Marshal.FreeCoTaskMem(dataPtr);
+                FreeNative(dataPtr);
                 return data;
             }
 
@@ -402,7 +403,7 @@ namespace NvhLibCSharp
 
                 double[] data = new double[bins];
                 Marshal.Copy(dataPtr, data, 0, bins);
-                Marshal.FreeCoTaskMem(dataPtr);
+                FreeNative(dataPtr);
                 return data;
             }
             finally
@@ -441,10 +442,10 @@ namespace NvhLibCSharp
 
             double[] data = new double[outLength];
             Marshal.Copy(dataPtr, data, 0, outLength);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
             freqAxis = new double[bins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, bins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             return data;
         }
@@ -489,11 +490,11 @@ namespace NvhLibCSharp
 
             double[] data = new double[outLength];
             Marshal.Copy(dataPtr, data, 0, outLength);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
 
             freqAxis = new double[bins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, bins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             return data;
         }
@@ -529,7 +530,7 @@ namespace NvhLibCSharp
             double[,] data = new double[freqBins, timeBins];
             double[] flatData = new double[timeBins * freqBins];
             Marshal.Copy(dataPtr, flatData, 0, timeBins * freqBins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
 
             for (int i = 0; i < freqBins; i++)
             {
@@ -571,11 +572,11 @@ namespace NvhLibCSharp
             double[,] data = new double[freqBins, timeBins];
             double[] flatData = new double[timeBins * freqBins];
             Marshal.Copy(dataPtr, flatData, 0, timeBins * freqBins);
-            Marshal.FreeCoTaskMem(dataPtr);
+            FreeNative(dataPtr);
 
             frequencyAxis = new double[freqBins];
             Marshal.Copy(frequencyBinsPtr, frequencyAxis, 0, freqBins);
-            Marshal.FreeCoTaskMem(frequencyBinsPtr);
+            FreeNative(frequencyBinsPtr);
 
             for (int i = 0; i < freqBins; i++)
             {
@@ -636,23 +637,23 @@ namespace NvhLibCSharp
                     Buffer.MemoryCopy((void*)spectrogramPtr, pDest, bytesToCopy, bytesToCopy);
                 }
             }
-            Marshal.FreeCoTaskMem(spectrogramPtr);
+            FreeNative(spectrogramPtr);
 
             freqAxis = new double[freqBins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, freqBins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-            Marshal.FreeCoTaskMem(timeAxisPtr);
+            FreeNative(timeAxisPtr);
 
             modulationDepth = new double[timeBins];
             Marshal.Copy(modulationDepthPtr, modulationDepth, 0, timeBins);
-            Marshal.FreeCoTaskMem(modulationDepthPtr);
+            FreeNative(modulationDepthPtr);
 
             modulationFreq = new double[timeBins];
             Marshal.Copy(modulationFreqPtr, modulationFreq, 0, timeBins);
-            Marshal.FreeCoTaskMem(modulationFreqPtr);
+            FreeNative(modulationFreqPtr);
 
             return spectrogram;
         }
@@ -698,23 +699,23 @@ namespace NvhLibCSharp
                     Buffer.MemoryCopy((void*)spectrogramPtr, pDest, bytesToCopy, bytesToCopy);
                 }
             }
-            Marshal.FreeCoTaskMem(spectrogramPtr);
+            FreeNative(spectrogramPtr);
 
             freqAxis = new double[freqBins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, freqBins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-            Marshal.FreeCoTaskMem(timeAxisPtr);
+            FreeNative(timeAxisPtr);
 
             modulationDepth = new double[timeBins];
             Marshal.Copy(modulationDepthPtr, modulationDepth, 0, timeBins);
-            Marshal.FreeCoTaskMem(modulationDepthPtr);
+            FreeNative(modulationDepthPtr);
 
             modulationFreq = new double[timeBins];
             Marshal.Copy(modulationFreqPtr, modulationFreq, 0, timeBins);
-            Marshal.FreeCoTaskMem(modulationFreqPtr);
+            FreeNative(modulationFreqPtr);
 
             return spectrogram;
         }
@@ -751,9 +752,9 @@ namespace NvhLibCSharp
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
             Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
 
-            Marshal.FreeCoTaskMem(specLoudnessPtr);
-            Marshal.FreeCoTaskMem(barkAxisPtr);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(specLoudnessPtr);
+            FreeNative(barkAxisPtr);
+            FreeNative(freqAxisPtr);
             return (loudness, specLoudness);
         }
 
@@ -798,11 +799,11 @@ namespace NvhLibCSharp
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
             Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-            Marshal.FreeCoTaskMem(loudnessPtr);
-            Marshal.FreeCoTaskMem(specLoudnessPtr);
-            Marshal.FreeCoTaskMem(barkAxisPtr);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
-            Marshal.FreeCoTaskMem(timeAxisPtr);
+            FreeNative(loudnessPtr);
+            FreeNative(specLoudnessPtr);
+            FreeNative(barkAxisPtr);
+            FreeNative(freqAxisPtr);
+            FreeNative(timeAxisPtr);
 
             for (int i = 0; i < barkBins; i++)
             {
@@ -840,15 +841,15 @@ namespace NvhLibCSharp
 
             specSharpness = new double[barkBins];
             Marshal.Copy(specSharpnessPtr, specSharpness, 0, barkBins);
-            Marshal.FreeCoTaskMem(specSharpnessPtr);
+            FreeNative(specSharpnessPtr);
 
             barkAxis = new double[barkBins];
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
-            Marshal.FreeCoTaskMem(barkAxisPtr);
+            FreeNative(barkAxisPtr);
 
             freqAxis = new double[barkBins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             return sharpness;
         }
@@ -879,7 +880,7 @@ namespace NvhLibCSharp
 
             double[] sharpness = new double[timeBins];
             Marshal.Copy(sharpnessPtr, sharpness, 0, timeBins);
-            Marshal.FreeCoTaskMem(sharpnessPtr);
+            FreeNative(sharpnessPtr);
 
             specSharpness = new double[barkBins, timeBins];
             int totalElement = barkBins * timeBins;
@@ -891,19 +892,19 @@ namespace NvhLibCSharp
                     Buffer.MemoryCopy((void*)specSharpnessPtr, pDest, bytesToCopy, bytesToCopy);
                 }
             }
-            Marshal.FreeCoTaskMem(specSharpnessPtr);
+            FreeNative(specSharpnessPtr);
 
             barkAxis = new double[barkBins];
             Marshal.Copy(barkAxisPtr, barkAxis, 0, barkBins);
-            Marshal.FreeCoTaskMem(barkAxisPtr);
+            FreeNative(barkAxisPtr);
 
             freqAxis = new double[barkBins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, barkBins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-            Marshal.FreeCoTaskMem(timeAxisPtr);
+            FreeNative(timeAxisPtr);
             return sharpness;
         }
 
@@ -940,7 +941,7 @@ namespace NvhLibCSharp
 
             roughnessTimeDep = new double[timeBins];
             Marshal.Copy(roughnessTimeDepPtr, roughnessTimeDep, 0, timeBins);
-            Marshal.FreeCoTaskMem(roughnessTimeDepPtr);
+            FreeNative(roughnessTimeDepPtr);
 
             roughnessSpec = new double[bandBins, timeBins];
             int totalElements = bandBins * timeBins;
@@ -952,27 +953,27 @@ namespace NvhLibCSharp
                     Buffer.MemoryCopy((void*)roughnessSpecPtr, pDest, bytesToCopy, bytesToCopy);
                 }
             }
-            Marshal.FreeCoTaskMem(roughnessSpecPtr);
+            FreeNative(roughnessSpecPtr);
 
             roughnessSpecAvg = new double[bandBins];
             Marshal.Copy(roughnessSpecAvgPtr, roughnessSpecAvg, 0, bandBins);
-            Marshal.FreeCoTaskMem(roughnessSpecAvgPtr);
+            FreeNative(roughnessSpecAvgPtr);
 
             bandAxis = new double[bandBins];
             Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
-            Marshal.FreeCoTaskMem(bandAxisPtr);
+            FreeNative(bandAxisPtr);
 
             barkAxis = new double[bandBins];
             Marshal.Copy(barkAxisPtr, barkAxis, 0, bandBins);
-            Marshal.FreeCoTaskMem(barkAxisPtr);
+            FreeNative(barkAxisPtr);
 
             freqAxis = new double[bandBins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, bandBins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-            Marshal.FreeCoTaskMem(timeAxisPtr);
+            FreeNative(timeAxisPtr);
 
             return roughness;
         }
@@ -1005,7 +1006,7 @@ namespace NvhLibCSharp
 
             fluctuationTimeDep = new double[timeBins];
             Marshal.Copy(fluctuationTimeDepPtr, fluctuationTimeDep, 0, timeBins);
-            Marshal.FreeCoTaskMem(fluctuationTimeDepPtr);
+            FreeNative(fluctuationTimeDepPtr);
 
             double[] flatFluctuationSpec = new double[bandBins * timeBins];
             Marshal.Copy(fluctuationSpecPtr, flatFluctuationSpec, 0, bandBins * timeBins);
@@ -1017,23 +1018,23 @@ namespace NvhLibCSharp
                     fluctuationSpec[i, j] = flatFluctuationSpec[j * bandBins + i];
                 }
             }
-            Marshal.FreeCoTaskMem(fluctuationSpecPtr);
+            FreeNative(fluctuationSpecPtr);
 
             fluctuationSpecAvg = new double[bandBins];
             Marshal.Copy(fluctuationSpecAvgPtr, fluctuationSpecAvg, 0, bandBins);
-            Marshal.FreeCoTaskMem(fluctuationSpecAvgPtr);
+            FreeNative(fluctuationSpecAvgPtr);
 
             bandAxis = new double[bandBins];
             Marshal.Copy(bandAxisPtr, bandAxis, 0, bandBins);
-            Marshal.FreeCoTaskMem(bandAxisPtr);
+            FreeNative(bandAxisPtr);
 
             freqAxis = new double[bandBins];
             Marshal.Copy(freqAxisPtr, freqAxis, 0, bandBins);
-            Marshal.FreeCoTaskMem(freqAxisPtr);
+            FreeNative(freqAxisPtr);
 
             timeAxis = new double[timeBins];
             Marshal.Copy(timeAxisPtr, timeAxis, 0, timeBins);
-            Marshal.FreeCoTaskMem(timeAxisPtr);
+            FreeNative(timeAxisPtr);
 
             return totalFluctuation;
         }
@@ -1058,6 +1059,13 @@ namespace NvhLibCSharp
             if (ret >= 0) return;
             
             throw new InvalidOperationException(GetLastErrorMessage(ret));
+        }
+
+        private static void FreeNative(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero) return;
+
+            Assert(NvhInterop.Free(ptr));
         }
     }
 }

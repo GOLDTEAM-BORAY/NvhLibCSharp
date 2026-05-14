@@ -274,7 +274,7 @@ namespace NvhLibCSharp
             {
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\channel_1.txt");
                 var signal = new Signal(sample, 1.0 / 51200);
-                var sharpness = Nvh.TimeVaryingSharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0, out var specSharpness, out var barks, out var times);
+                var sharpness = Nvh.TimeVaryingSharpnessAnalyze(signal, Enums.SharpnessWeighting.Din, Enums.SoundField.Free, 0.0, out var specSharpness, out var barks, out var freqAxis, out var times);
                 for (int i = 0; i < times.Length; i++)
                 {
                     Console.WriteLine($"{times[i]:F6}\t{sharpness[i]:F6}");
