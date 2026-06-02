@@ -372,6 +372,39 @@ namespace NvhLibCSharp
         }
 
         /// <summary>
+        /// 使用分数重采样器将信号重采样到目标采样率。
+        /// </summary>
+        /// <param name="signal">输入信号。</param>
+        /// <param name="destSamplerate">目标采样率，单位 Hz。</param>
+        /// <param name="bandRatio">通带与奈奎斯特带宽的比值。</param>
+        /// <returns>重采样后的信号样本。</returns>
+        public static double[] ResampleSignal(Signal signal, double destSamplerate, double bandRatio)
+        {
+            return ResampleSignal(signal, destSamplerate, bandRatio, FractionalResamplerPlanningMode.Balanced);
+        }
+
+        /// <summary>
+        /// 使用分数重采样器将信号重采样到目标采样率。
+        /// </summary>
+        /// <param name="signal">输入信号。</param>
+        /// <param name="destSamplerate">目标采样率，单位 Hz。</param>
+        /// <param name="bandRatio">通带与奈奎斯特带宽的比值。</param>
+        /// <param name="planningMode">stage 分解规划策略。</param>
+        /// <returns>重采样后的信号样本。</returns>
+        public static double[] ResampleSignal(Signal signal, double destSamplerate, double bandRatio, FractionalResamplerPlanningMode planningMode)
+        {
+            IntPtr dataPtr = IntPtr.Zero;
+            int bins = 0;
+            int errCode = NvhInterop.ResampleSignalWithPlanningMode(signal, destSamplerate, bandRatio, (int)planningMode, ref dataPtr, ref bins);
+            Assert(errCode);
+
+            double[] data = new double[bins];
+            Marshal.Copy(dataPtr, data, 0, bins);
+            FreeNative(dataPtr);
+            return data;
+        }
+
+        /// <summary>
         /// 计算固定带/跟踪带包络线（Hilbert Envelope Ex）。
         /// </summary>
         /// <param name="signal">时域波形</param>

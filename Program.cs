@@ -16,8 +16,10 @@
 // #define TIME_VARYING_SHARPNESS
 // #define ROUGHNESS
 // #define OCTAVE
+ #define RESAMPLE
 
 using NvhLibCSharp.Interop;
+using NvhLibCSharp.Enums;
 using NvhLibCSharp.Options;
 using NvhLibCSharp.Utils;
 
@@ -28,6 +30,10 @@ namespace NvhLibCSharp
         static void Main(string[] args)
         {
             Nvh.LoadLicense("LIC-20260105-20bbbf6e.lic");
+#if RESAMPLE
+            ResampleDemo();
+#endif
+
 #if OVERALL
             {
                 var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\sound_signal_0.txt");
@@ -340,6 +346,25 @@ namespace NvhLibCSharp
                 PlotHelper.PlotFigure("figures/octave_spectrum.png", bandCenter, [(bandLevels, "Third Octave Band Levels")]);
             }
 #endif
+        }
+
+        private static void ResampleDemo()
+        {
+            const double sourceSamplerate = 51200.0;
+            const double destSamplerate = 1800.0;
+            const double bandRatio = 0.8;
+
+            var sample = LoadData.Double("D:\\source\\NvhLibCSharp\\SampleData\\simple.txt");
+            var signal = new Signal(sample, 1.0 / sourceSamplerate);
+            var resampled = Nvh.ResampleSignal(signal, destSamplerate, bandRatio, FractionalResamplerPlanningMode.Balanced);
+
+            Console.WriteLine($"Source: {sample.Length} samples @ {sourceSamplerate:F0} Hz");
+            Console.WriteLine($"Resampled: {resampled.Length} samples @ {destSamplerate:F0} Hz");
+
+            for (int i = 0; i < Math.Min(resampled.Length, 10); i++)
+            {
+                Console.WriteLine($"{i / destSamplerate:F6}\t{resampled[i]:F6}");
+            }
         }
     }
 }
